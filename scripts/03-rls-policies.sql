@@ -95,8 +95,19 @@ CREATE POLICY "System can create notifications" ON notifications
 CREATE POLICY "Everyone can view materials" ON materials
   FOR SELECT USING (true);
 
-CREATE POLICY "Authenticated can upload materials" ON materials
-  FOR INSERT WITH CHECK (auth.uid() = uploaded_by);
+CREATE POLICY "Teachers and admin can upload materials" ON materials
+  FOR INSERT WITH CHECK (
+    (SELECT role FROM users WHERE id = auth.uid()) IN ('teacher', 'admin', 'staff')
+  );
+
+CREATE POLICY "Users can update own materials" ON materials
+  FOR UPDATE USING (auth.uid() = uploaded_by);
+
+CREATE POLICY "Teachers and admin can delete materials" ON materials
+  FOR DELETE USING (
+    (SELECT role FROM users WHERE id = auth.uid()) IN ('teacher', 'admin', 'staff') OR 
+    auth.uid() = uploaded_by
+  );
 
 -- Badges
 CREATE POLICY "Everyone can view badges" ON badges

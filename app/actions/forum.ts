@@ -28,10 +28,18 @@ export async function submitForumComment(discussionId: string, content: string) 
   }
 
   // Increment replies count
-  await supabase
+  const { data: currentDiscussion, error: fetchError } = await supabase
     .from("forum_discussions")
-    .update({ replies_count: supabase.raw("replies_count + 1") })
+    .select("replies_count")
     .eq("id", discussionId)
+    .single()
+
+  if (!fetchError) {
+    await supabase
+      .from("forum_discussions")
+      .update({ replies_count: (currentDiscussion?.replies_count || 0) + 1 })
+      .eq("id", discussionId)
+  }
 
   await awardXP(session.user.id, 8, "Commento su discussione")
 

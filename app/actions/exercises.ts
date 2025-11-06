@@ -40,9 +40,21 @@ export async function likeExercise(exerciseId: string) {
     data: { session },
   } = await supabase.auth.getSession()
 
+  // First, get current likes count
+  const { data: currentExercise, error: fetchError } = await supabase
+    .from("exercises")
+    .select("likes_count")
+    .eq("id", exerciseId)
+    .single()
+
+  if (fetchError) {
+    return { error: fetchError.message }
+  }
+
+  // Then update with incremented count
   const { data, error } = await supabase
     .from("exercises")
-    .update({ likes_count: supabase.raw("likes_count + 1") })
+    .update({ likes_count: (currentExercise?.likes_count || 0) + 1 })
     .eq("id", exerciseId)
     .select()
 

@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
+import { awardXP } from "@/lib/actions/gamification"
 
 export async function submitQuizAttempt(
   quizId: string,
@@ -34,12 +35,9 @@ export async function submitQuizAttempt(
     return { error: error.message }
   }
 
-  // Award XP based on score
+  // Award XP based on score using the existing awardXP function
   const xpGained = Math.floor(percentage * 10)
-  await supabase
-    .from("users")
-    .update({ xp_points: supabase.raw(`xp_points + ${xpGained}`) })
-    .eq("id", session.user.id)
+  await awardXP(session.user.id, xpGained, "Quiz completato")
 
   revalidatePath("/quiz")
   return { success: true, xpGained }

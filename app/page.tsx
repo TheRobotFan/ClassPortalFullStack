@@ -2,6 +2,7 @@ import { Navbar } from "@/components/navbar"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Sparkles, TrendingUp, MessageSquare, BookOpen, Award } from "lucide-react"
+import { TopContributors } from "@/components/top-contributors"
 import Link from "next/link"
 import { getDashboardStats, getRecentActivityFeed } from "@/lib/actions/dashboard"
 import { getFeaturedContributors } from "@/lib/actions/featured"
@@ -140,6 +141,19 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* Top Contributors Section */}
+      <section className="max-w-7xl mx-auto px-4 py-12">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold">Top Contributori della Classe</h2>
+          <Link href="/leaderboard">
+            <Button variant="outline" size="sm">
+              Vedi Classifica Completa
+            </Button>
+          </Link>
+        </div>
+        <TopContributors limit={8} showViewAll={false} />
+      </section>
+
       {/* Recent Updates and Sidebar */}
       <section className="max-w-7xl mx-auto px-4 py-12">
         <div className="grid lg:grid-cols-3 gap-8">
@@ -178,34 +192,56 @@ export default async function HomePage() {
 
           {/* Sidebar */}
           <aside className="space-y-6">
-            {featuredContributors.length > 0 && (
-              <Card className="p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <Award className="w-5 h-5 text-primary" />
-                  <h3 className="font-bold">Top Contributori</h3>
+            {/* Enhanced Stats Card */}
+            <Card className="p-6 bg-gradient-to-br from-primary/5 to-secondary/5">
+              <h3 className="font-bold mb-4 flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-primary" />
+                Statistiche della Classe
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-primary">{stats.usersCount || 0}</div>
+                  <div className="text-xs text-foreground/60">Studenti</div>
                 </div>
-                <div className="space-y-3">
-                  {featuredContributors.slice(0, 3).map((contributor: any) => (
-                    <div key={contributor.id} className="flex items-center gap-3">
-                      <div className="text-2xl">{contributor.avatar_url || "👤"}</div>
-                      <div className="flex-1">
-                        <p className="font-semibold text-sm">{contributor.full_name || "Utente"}</p>
-                        <p className="text-xs text-foreground/60">{contributor.contributions || 0} contributi</p>
-                      </div>
-                      <div className="flex gap-1">
-                        {Array(Math.min(contributor.stars || 0, 3))
-                          .fill(0)
-                          .map((_, i) => (
-                            <span key={i} className="text-xs">
-                              ⭐
-                            </span>
-                          ))}
-                      </div>
-                    </div>
-                  ))}
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-secondary">{stats.materialsCount || 0}</div>
+                  <div className="text-xs text-foreground/60">Appunti</div>
                 </div>
-              </Card>
-            )}
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-600">{stats.exercisesCount || 0}</div>
+                  <div className="text-xs text-foreground/60">Esercizi</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-orange-600">{stats.forumCount || 0}</div>
+                  <div className="text-xs text-foreground/60">Discussioni</div>
+                </div>
+              </div>
+            </Card>
+
+            {/* Quick Actions */}
+            <Card className="p-6">
+              <h3 className="font-bold mb-4">Azioni Veloci</h3>
+              <div className="space-y-2">
+                <Link href="/appunti">
+                  <Button variant="outline" size="sm" className="w-full justify-start gap-2">
+                    <BookOpen className="w-4 h-4" />
+                    Carica Appunto
+                  </Button>
+                </Link>
+                <Link href="/forum">
+                  <Button variant="outline" size="sm" className="w-full justify-start gap-2">
+                    <MessageSquare className="w-4 h-4" />
+                    Nuova Discussione
+                  </Button>
+                </Link>
+                <Link href="/quiz">
+                  <Button variant="outline" size="sm" className="w-full justify-start gap-2">
+                    <Award className="w-4 h-4" />
+                    Completa Quiz
+                  </Button>
+                </Link>
+              </div>
+            </Card>
 
             {user && userProfile && (
               <Card className="p-6 bg-gradient-to-br from-primary/5 to-secondary/5">

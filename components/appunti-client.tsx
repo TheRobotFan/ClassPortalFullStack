@@ -5,8 +5,19 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { FileText, Download, Eye, User, Plus, Search, Grid3x3, List } from "lucide-react"
-import { getMaterials, incrementMaterialViews, incrementMaterialDownloads } from "@/lib/actions/materials"
+import { FileText, Download, Eye, User, Plus, Search, Grid3x3, List, Edit, Trash2, Tag } from "lucide-react"
+import { 
+  getMaterials, 
+  getMaterialById, 
+  createMaterial, 
+  updateMaterial, 
+  deleteMaterial,
+  getUserMaterials,
+  searchMaterials,
+  incrementMaterialViews,
+  incrementMaterialDownloads,
+  type Material as MaterialType
+} from '@/lib/actions/materials'
 import { awardXP } from "@/lib/actions/gamification"
 import { createClient } from "@/lib/supabase/client"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
@@ -14,6 +25,9 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
+import { Badge } from "@/components/ui/badge"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
+import { EditMaterialDialog } from "@/components/edit-material-dialog"
 
 type Material = {
   id: string
@@ -43,24 +57,58 @@ export function AppuntiClient() {
   const { toast } = useToast()
   const supabase = createClient()
   const [isAdmin, setIsAdmin] = useState(false)
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [editingMaterial, setEditingMaterial] = useState<Material | null>(null)
+  const [editOpen, setEditOpen] = useState(false)
 
   useEffect(() => {
     loadMaterials()
     checkAdmin()
     loadSubjects()
+    getCurrentUser()
   }, [])
+
+  async function getCurrentUser() {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (user) {
+      setCurrentUserId(user.id)
+    }
+  }
 
   async function loadMaterials() {
     setLoading(true)
-    const data = await getMaterials()
-    setMaterials(data)
-    setLoading(false)
+    try {
+      // Add timeout to prevent infinite loading
+      const timeoutPromise = new Promise<Material[]>((_, reject) => 
+        setTimeout(() => reject(new Error("Timeout loading materials")), 10000)
+      )
+      
+      const dataPromise = getMaterials()
+      const data = await Promise.race([dataPromise, timeoutPromise])
+      setMaterials(data as any)
+    } catch (error) {
+      console.error("Error loading materials:", error)
+      toast({
+        title: "Errore",
+        description: "Impossibile caricare gli appunti",
+        variant: "destructive",
+      })
+      setMaterials([])
+    } finally {
+      setLoading(false)
+    }
   }
 
   async function loadSubjects() {
     const { data, error } = await supabase.from("subjects").select("id, name").order("name")
     if (!error && data) {
-      setSubjects(data)
+      // Remove duplicates based on name
+      const uniqueSubjects = data.filter((subject, index, self) => 
+        index === self.findIndex((s) => s.name === subject.name)
+      )
+      setSubjects(uniqueSubjects)
     }
   }
 
@@ -109,45 +157,63 @@ export function AppuntiClient() {
     e.preventDefault()
     setUploading(true)
 
-    const formData = new FormData(e.currentTarget)
-    const file = formData.get("file") as File
-    const title = formData.get("title") as string
-    const description = formData.get("description") as string
-    const subjectId = formData.get("subject") as string
-
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (!user) throw new Error("Non autenticato")
+      // Add timeout for the entire upload process
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Upload timeout - riprova con un file più piccolo")), 30000)
+      )
 
-      // Upload file to Supabase Storage
-      const fileExt = file.name.split(".").pop()
-      const fileName = `${user.id}/${Date.now()}.${fileExt}`
-      const { data: uploadData, error: uploadError } = await supabase.storage.from("materials").upload(fileName, file)
+      const uploadProcess = async () => {
+        const formData = new FormData(e.currentTarget)
+        const file = formData.get("file") as File
+        const title = formData.get("title") as string
+        const description = formData.get("description") as string
+        const subjectId = formData.get("subject") as string
 
-      if (uploadError) throw uploadError
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
+        if (!user) throw new Error("Non autenticato")
 
-      // Get public URL
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("materials").getPublicUrl(fileName)
+        // Upload file to Supabase Storage
+        const fileExt = file.name.split(".").pop()
+        const fileName = `${user.id}/${Date.now()}.${fileExt}`
+        const { data: uploadData, error: uploadError } = await supabase.storage.from("materials").upload(fileName, file)
 
-      // Create material record
-      const { error: insertError } = await supabase.from("materials").insert({
-        title,
-        description,
-        subject_id: subjectId,
-        file_url: publicUrl,
-        file_type: file.type,
-        file_size: file.size,
-        uploaded_by: user.id,
-      })
+        if (uploadError) throw uploadError
 
-      if (insertError) throw insertError
+        // Get public URL
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from("materials").getPublicUrl(fileName)
 
-      // Award XP for uploading
-      await awardXP(user.id, 20, "upload_material")
+        // Create material record
+        const { error: insertError } = await supabase.from("materials").insert({
+          title,
+          description,
+          subject_id: subjectId,
+          file_url: publicUrl || '',
+          file_type: file.type.length > 50 ? file.type.substring(0, 50) : file.type,
+          file_size: file.size,
+          uploaded_by: user.id,
+          // Temporaneamente rimosso user_id per errore cache
+          // user_id: user.id,
+          downloads_count: 0,
+          views_count: 0,
+          // Temporaneamente rimossi i campi che causano errore
+          // tags: formData.get("tags") ? (formData.get("tags") as string).split(',').map((tag: string) => tag.trim()).filter(Boolean) : [],
+          // is_public: formData.get("is_public") === "true",
+        })
+
+        if (insertError) throw insertError
+
+        // Award XP for uploading
+        await awardXP(user.id, 20, "upload_material")
+
+        return { success: true }
+      }
+
+      await Promise.race([uploadProcess(), timeoutPromise])
 
       toast({
         title: "Caricamento completato!",
@@ -157,9 +223,23 @@ export function AppuntiClient() {
       setUploadOpen(false)
       loadMaterials()
     } catch (error) {
+      console.error("Upload error:", error)
+      console.error("Upload error details:", JSON.stringify(error, null, 2))
+      
+      let errorMessage = "Impossibile caricare il file"
+      if (error instanceof Error) {
+        errorMessage = error.message
+      } else if (typeof error === 'object' && error !== null) {
+        if ('message' in error) {
+          errorMessage = (error as any).message
+        } else if ('error' in error) {
+          errorMessage = (error as any).error?.message || JSON.stringify((error as any).error)
+        }
+      }
+      
       toast({
         title: "Errore",
-        description: "Impossibile caricare il file",
+        description: errorMessage,
         variant: "destructive",
       })
     } finally {
@@ -167,7 +247,65 @@ export function AppuntiClient() {
     }
   }
 
-  const subjectNames = ["Tutti", ...subjects.map((s) => s.name)]
+  async function handleDelete(materialId: string) {
+    try {
+      await deleteMaterial(materialId)
+      toast({
+        title: "Materiale eliminato",
+        description: "Il materiale è stato eliminato con successo",
+      })
+      loadMaterials()
+    } catch (error) {
+      console.error("Delete error:", error)
+      toast({
+        title: "Errore",
+        description: error instanceof Error ? error.message : "Impossibile eliminare il materiale",
+        variant: "destructive",
+      })
+    }
+  }
+
+  async function handleEdit(material: Material) {
+    setEditingMaterial(material)
+    setEditOpen(true)
+  }
+
+  async function handleUpdateMaterial(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    if (!editingMaterial) return
+
+    setUploading(true)
+    try {
+      const formData = new FormData(e.currentTarget)
+      const updateData = {
+        title: formData.get("title") as string,
+        description: formData.get("description") as string,
+        subject_id: formData.get("subject") as string,
+        tags: (formData.get("tags") as string).split(',').map(tag => tag.trim()).filter(Boolean),
+        is_public: formData.get("is_public") === "true",
+      }
+
+      await updateMaterial(editingMaterial.id, updateData)
+      toast({
+        title: "Materiale aggiornato",
+        description: "Il materiale è stato aggiornato con successo",
+      })
+      setEditOpen(false)
+      setEditingMaterial(null)
+      loadMaterials()
+    } catch (error) {
+      console.error("Update error:", error)
+      toast({
+        title: "Errore",
+        description: error instanceof Error ? error.message : "Impossibile aggiornare il materiale",
+        variant: "destructive",
+      })
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const subjectNames = ["Tutti", ...new Set(subjects.map((s) => s.name))]
 
   const filteredMaterials = materials.filter((material) => {
     const matchSearch =
@@ -184,7 +322,21 @@ export function AppuntiClient() {
   }
 
   if (loading) {
-    return <div className="max-w-7xl mx-auto px-4 py-8">Caricamento...</div>
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
+        <p className="text-foreground/60 mb-4">Caricamento appunti...</p>
+        <Button 
+          variant="outline" 
+          onClick={() => {
+            setLoading(false)
+            setTimeout(() => loadMaterials(), 100)
+          }}
+        >
+          Riprova
+        </Button>
+      </div>
+    )
   }
 
   return (
@@ -224,11 +376,31 @@ export function AppuntiClient() {
                       <SelectValue placeholder="Seleziona materia" />
                     </SelectTrigger>
                     <SelectContent>
-                      {subjects.map((subject) => (
+                      {subjects
+                        .filter((subject, index, self) => 
+                          index === self.findIndex((s) => s.name === subject.name)
+                        )
+                        .map((subject) => (
                         <SelectItem key={subject.id} value={subject.id}>
                           {subject.name}
                         </SelectItem>
                       ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Tag (separati da virgola)</label>
+                  <Input name="tags" placeholder="es: formule, esami, ripasso" />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Visibilità</label>
+                  <Select name="is_public" defaultValue="true">
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="true">Pubblico</SelectItem>
+                      <SelectItem value="false">Privato</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -244,6 +416,16 @@ export function AppuntiClient() {
           </Dialog>
         )}
       </div>
+
+      {/* Edit Material Dialog */}
+      <EditMaterialDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        material={editingMaterial as unknown as MaterialType}
+        subjects={subjects}
+        onSubmit={handleUpdateMaterial}
+        uploading={uploading}
+      />
 
       {/* Search and View Toggle */}
       <div className="flex gap-4 mb-6">
@@ -285,9 +467,9 @@ export function AppuntiClient() {
             <div className="mb-6">
               <p className="text-sm font-semibold mb-3 text-foreground/70">Materia</p>
               <div className="space-y-2">
-                {subjectNames.map((subject) => (
+                {subjectNames.map((subject, index) => (
                   <button
-                    key={subject}
+                    key={`${subject}-${index}`}
                     onClick={() => setSelectedSubject(subject)}
                     className={`w-full text-left px-3 py-2 rounded transition ${
                       selectedSubject === subject
@@ -325,6 +507,17 @@ export function AppuntiClient() {
 
                   <p className="text-sm text-foreground/70 mb-4 line-clamp-2">{material.description}</p>
 
+                  {(material as any).tags && (material as any).tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mb-4">
+                      {(material as any).tags.map((tag: string, index: number) => (
+                        <Badge key={index} variant="secondary" className="text-xs">
+                          <Tag className="w-3 h-3 mr-1" />
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+
                   <div className="flex items-center justify-between text-xs text-foreground/60 mb-4 py-3 border-t border-border">
                     <div className="flex gap-4">
                       <span className="flex items-center gap-1">
@@ -339,17 +532,65 @@ export function AppuntiClient() {
                     </span>
                   </div>
 
-                  <Button
-                    className="w-full gap-2 bg-primary hover:bg-primary/90"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleDownload(material)
-                    }}
-                  >
-                    <Download className="w-4 h-4" />
-                    Scarica
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      className="flex-1 gap-2 bg-primary hover:bg-primary/90"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDownload(material)
+                      }}
+                    >
+                      <Download className="w-4 h-4" />
+                      Scarica
+                    </Button>
+                    
+                    {(currentUserId === (material as any).uploaded_by || isAdmin) && (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleEdit(material)
+                          }}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                              }}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Elimina Materiale</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Sei sicuro di voler eliminare "{material.title}"? Questa azione non può essere annullata.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Annulla</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDelete(material.id)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Elimina
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </>
+                    )}
+                  </div>
                 </Card>
               ))}
             </div>

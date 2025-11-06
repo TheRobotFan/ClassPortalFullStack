@@ -25,6 +25,12 @@ export async function signUp(email: string, password: string, fullName: string, 
     email,
     full_name: fullName,
     role,
+    xp_points: 0,
+    level: 1,
+    profile_completed: false,
+    is_active: true,
+    consecutive_active_days: 0,
+    total_active_days: 0,
   })
 
   if (profileError) {

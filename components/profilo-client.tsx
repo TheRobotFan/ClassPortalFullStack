@@ -1,14 +1,16 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Navbar } from "@/components/navbar"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Mail, MapPin, Edit2, Settings, LogOut, Phone, Calendar } from "lucide-react"
+import { Mail, MapPin, Edit2, Settings, LogOut, Phone, Calendar, Camera, Upload, Trash2 } from "lucide-react"
+import { UserActivity } from "@/components/user-activity"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
+import { useToast } from "@/hooks/use-toast"
 
 interface ProfiloClientProps {
   user: any
@@ -19,6 +21,137 @@ interface ProfiloClientProps {
 export function ProfiloClient({ user, stats, badges }: ProfiloClientProps) {
   const router = useRouter()
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [uploadingImage, setUploadingImage] = useState(false)
+  const [imageUrl, setImageUrl] = useState(user.avatar_url)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const { toast } = useToast()
+  const supabase = createClient()
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    // Validate file type and size
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Errore",
+        description: "Per favore seleziona un'immagine valida",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      toast({
+        title: "Errore",
+        description: "L'immagine non può superare i 5MB",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setUploadingImage(true)
+    try {
+      // Get current user
+      const { data: { user: authUser }, error: userError } = await supabase.auth.getUser()
+      if (userError || !authUser) {
+        console.error("Auth error:", userError)
+        throw new Error("Utente non autenticato")
+      }
+
+      console.log("User authenticated:", authUser.id)
+
+      // Upload image to Supabase Storage with simpler path
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${authUser.id}.${fileExt}`
+      const filePath = fileName // Direct path without folder
+
+      console.log("Uploading file:", filePath)
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, {
+          upsert: true,
+          contentType: file.type
+        })
+
+      if (uploadError) {
+        console.error("Upload error details:", uploadError)
+        throw uploadError
+      }
+
+      console.log("Upload successful:", uploadData)
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath)
+
+      console.log("Public URL:", publicUrl)
+
+      // Update user profile with new avatar URL
+      const { data: updateData, error: updateError } = await supabase
+        .from('users')
+        .update({ avatar_url: publicUrl })
+        .eq('id', authUser.id)
+        .select()
+
+      if (updateError) {
+        console.error("Profile update error:", updateError)
+        throw updateError
+      }
+
+      console.log("Profile updated:", updateData)
+
+      setImageUrl(publicUrl)
+      toast({
+        title: "Immagine aggiornata!",
+        description: "La tua immagine del profilo è stata aggiornata con successo",
+      })
+    } catch (error) {
+      console.error('Error uploading image:', error)
+      toast({
+        title: "Errore",
+        description: error instanceof Error ? error.message : "Impossibile aggiornare l'immagine del profilo",
+        variant: "destructive",
+      })
+    } finally {
+      setUploadingImage(false)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    }
+  }
+
+  const handleRemoveImage = async () => {
+    if (!confirm("Sei sicuro di voler rimuovere la tua immagine del profilo?")) return
+
+    try {
+      const { data: { user: authUser } } = await supabase.auth.getUser()
+      if (!authUser) throw new Error("Utente non autenticato")
+
+      // Remove avatar URL from user profile
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({ avatar_url: null })
+        .eq('id', authUser.id)
+
+      if (updateError) throw updateError
+
+      setImageUrl(null)
+      toast({
+        title: "Immagine rimossa",
+        description: "La tua immagine del profilo è stata rimossa",
+      })
+    } catch (error) {
+      console.error('Error removing image:', error)
+      toast({
+        title: "Errore",
+        description: "Impossibile rimuovere l'immagine del profilo",
+        variant: "destructive",
+      })
+    }
+  }
 
   const handleLogout = async () => {
     if (confirm("Sei sicuro di voler effettuare il logout?")) {
@@ -77,8 +210,44 @@ export function ProfiloClient({ user, stats, badges }: ProfiloClientProps) {
         <Card className="p-8 mb-8 bg-gradient-to-r from-primary/10 to-secondary/10">
           <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
             <div className="flex gap-6 items-start flex-1">
-              <div className="w-20 h-20 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white text-3xl font-bold">
-                {user.avatar_url || user.full_name?.charAt(0).toUpperCase() || "U"}
+              <div className="relative group">
+                <div className="w-20 h-20 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white text-3xl font-bold overflow-hidden">
+                  {imageUrl ? (
+                    <img 
+                      src={imageUrl} 
+                      alt="Profile" 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    user.full_name?.charAt(0).toUpperCase() || "U"
+                  )}
+                </div>
+                <div className="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
+                     onClick={() => fileInputRef.current?.click()}>
+                  <Camera className="w-6 h-6 text-white" />
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                  disabled={uploadingImage}
+                />
+                {imageUrl && (
+                  <button
+                    onClick={handleRemoveImage}
+                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Rimuovi immagine"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                )}
+                {uploadingImage && (
+                  <div className="absolute inset-0 bg-black/70 rounded-full flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                  </div>
+                )}
               </div>
               <div className="flex-1">
                 <div className="flex gap-3 items-center mb-2">
@@ -147,26 +316,59 @@ export function ProfiloClient({ user, stats, badges }: ProfiloClientProps) {
 
         {/* Stats Row */}
         <div className="grid md:grid-cols-4 gap-4 mb-8">
-          <Card className="p-6 text-center">
+          <Card className="p-6 text-center group hover:shadow-md transition-shadow">
             <div className="text-2xl mb-2">📝</div>
             <div className="text-2xl font-bold text-primary mb-1">{stats.materials || 0}</div>
             <p className="text-sm text-foreground/60">Appunti Caricati</p>
+            <p className="text-xs text-foreground/40 mt-1">Materiali condivisi</p>
           </Card>
-          <Card className="p-6 text-center">
+          <Card className="p-6 text-center group hover:shadow-md transition-shadow">
             <div className="text-2xl mb-2">💬</div>
             <div className="text-2xl font-bold text-secondary mb-1">{stats.discussions || 0}</div>
             <p className="text-sm text-foreground/60">Discussioni</p>
+            <p className="text-xs text-foreground/40 mt-1">Argomenti creati</p>
           </Card>
-          <Card className="p-6 text-center">
+          <Card className="p-6 text-center group hover:shadow-md transition-shadow">
             <div className="text-2xl mb-2">✍️</div>
             <div className="text-2xl font-bold text-primary mb-1">{stats.comments || 0}</div>
             <p className="text-sm text-foreground/60">Commenti</p>
+            <p className="text-xs text-foreground/40 mt-1">Risposte inviate</p>
           </Card>
-          <Card className="p-6 text-center">
+          <Card className="p-6 text-center group hover:shadow-md transition-shadow">
             <div className="text-2xl mb-2">🎓</div>
             <div className="text-2xl font-bold text-secondary mb-1">{stats.quizzes || 0}</div>
             <p className="text-sm text-foreground/60">Quiz Completati</p>
+            <p className="text-xs text-foreground/40 mt-1">Test superati</p>
           </Card>
+        </div>
+
+        {/* Additional Stats Row */}
+        <div className="grid md:grid-cols-2 gap-4 mb-8">
+          <Card className="p-6 text-center group hover:shadow-md transition-shadow">
+            <div className="text-2xl mb-2">🚀</div>
+            <div className="text-2xl font-bold text-orange-600 mb-1">{stats.projects || 0}</div>
+            <p className="text-sm text-foreground/60">Progetti</p>
+            <p className="text-xs text-foreground/40 mt-1">Progetti creati</p>
+          </Card>
+          <Card className="p-6 text-center group hover:shadow-md transition-shadow">
+            <div className="text-2xl mb-2">💪</div>
+            <div className="text-2xl font-bold text-green-600 mb-1">{stats.exercises || 0}</div>
+            <p className="text-sm text-foreground/60">Esercizi</p>
+            <p className="text-xs text-foreground/40 mt-1">Esercizi creati</p>
+          </Card>
+        </div>
+
+        {/* Stats Summary */}
+        <div className="flex justify-center mb-6">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => router.refresh()}
+            className="gap-2"
+          >
+            <Upload className="w-4 h-4" />
+            Aggiorna Statistiche
+          </Button>
         </div>
 
         {/* XP and Level Card */}
@@ -236,12 +438,7 @@ export function ProfiloClient({ user, stats, badges }: ProfiloClientProps) {
 
           {/* Activity Tab */}
           <TabsContent value="activity">
-            <Card className="p-8">
-              <h2 className="text-2xl font-bold mb-6">Attività Recente</h2>
-              <div className="text-center py-12">
-                <p className="text-foreground/60">Funzionalità in arrivo</p>
-              </div>
-            </Card>
+            <UserActivity userId={user.id} />
           </TabsContent>
 
           {/* Stats Tab */}

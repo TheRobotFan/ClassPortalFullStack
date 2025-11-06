@@ -73,38 +73,170 @@ export async function getActivityTrend() {
 
 export async function getMostViewedContent() {
   const supabase = await createClient()
-  const { data, error } = await supabase.rpc("get_most_viewed_content")
+  
+  try {
+    // Get materials with views
+    const { data: materials, error: materialsError } = await supabase
+      .from("materials")
+      .select(`
+        id,
+        title,
+        views_count,
+        users:users!materials_uploaded_by_fkey(full_name)
+      `)
+      .order("views_count", { ascending: false })
+      .limit(5)
 
-  if (error) {
-    console.error("Error fetching most viewed content:", error)
+    // Get exercises with views
+    const { data: exercises, error: exercisesError } = await supabase
+      .from("exercises")
+      .select(`
+        id,
+        title,
+        views_count,
+        users:users!exercises_created_by_fkey(full_name)
+      `)
+      .order("views_count", { ascending: false })
+      .limit(5)
+
+    // Get forum discussions with views
+    const { data: discussions, error: discussionsError } = await supabase
+      .from("forum_discussions")
+      .select(`
+        id,
+        title,
+        views_count,
+        users:users!forum_discussions_user_id_fkey(full_name)
+      `)
+      .order("views_count", { ascending: false })
+      .limit(5)
+
+    if (materialsError || exercisesError || discussionsError) {
+      console.error("Error fetching content:", { materialsError, exercisesError, discussionsError })
+      return []
+    }
+
+    // Combine and format all content
+    const allContent = [
+      ...(materials || []).map((m: any) => ({
+        id: m.id,
+        title: m.title,
+        type: 'material',
+        views: m.views_count || 0,
+        author: m.users?.full_name || 'Unknown'
+      })),
+      ...(exercises || []).map((e: any) => ({
+        id: e.id,
+        title: e.title,
+        type: 'exercise',
+        views: e.views_count || 0,
+        author: e.users?.full_name || 'Unknown'
+      })),
+      ...(discussions || []).map((d: any) => ({
+        id: d.id,
+        title: d.title,
+        type: 'discussion',
+        views: d.views_count || 0,
+        author: d.users?.full_name || 'Unknown'
+      }))
+    ]
+
+    // Sort by views and return top 10
+    return allContent
+      .sort((a, b) => b.views - a.views)
+      .slice(0, 10)
+
+  } catch (error) {
+    console.error("Error in getMostViewedContent:", error)
     return []
   }
-
-  return data || []
 }
 
 export async function getMostActiveUsers() {
   const supabase = await createClient()
-  const { data, error } = await supabase.rpc("get_most_active_users")
+  
+  try {
+    // Get users with their contribution counts
+    const { data: users, error } = await supabase
+      .from("users")
+      .select(`
+        id,
+        full_name,
+        xp_points,
+        level,
+        materials_count:materials(count),
+        exercises_count:exercises(count),
+        discussions_count:forum_discussions(count)
+      `)
+      .order("xp_points", { ascending: false })
+      .limit(10)
 
-  if (error) {
-    console.error("Error fetching most active users:", error)
+    if (error) {
+      console.error("Error fetching most active users:", error)
+      return []
+    }
+
+    // Calculate total contributions
+    return (users || []).map((user: any) => ({
+      id: user.id,
+      full_name: user.full_name,
+      contributions: (user.materials_count?.[0]?.count || 0) + (user.exercises_count?.[0]?.count || 0) + (user.discussions_count?.[0]?.count || 0),
+      xp_points: user.xp_points || 0
+    }))
+
+  } catch (error) {
+    console.error("Error in getMostActiveUsers:", error)
     return []
   }
-
-  return data || []
 }
 
 export async function getSubjectDistribution() {
   const supabase = await createClient()
-  const { data, error } = await supabase.rpc("get_subject_distribution")
+  
+  try {
+    // Get all subjects
+    const { data: subjects, error: subjectsError } = await supabase
+      .from("subjects")
+      .select("id, name, color")
 
-  if (error) {
-    console.error("Error fetching subject distribution:", error)
+    if (subjectsError) {
+      console.error("Error fetching subjects:", subjectsError)
+      return []
+    }
+
+    // Get content counts for each subject
+    const distribution = await Promise.all(
+      (subjects || []).map(async (subject) => {
+        const [
+          { count: materialsCount },
+          { count: exercisesCount },
+          { count: quizzesCount }
+        ] = await Promise.all([
+          supabase.from("materials").select("*", { count: "exact", head: true }).eq("subject_id", subject.id),
+          supabase.from("exercises").select("*", { count: "exact", head: true }).eq("subject_id", subject.id),
+          supabase.from("quizzes").select("*", { count: "exact", head: true }).eq("subject_id", subject.id)
+        ])
+
+        const total = (materialsCount || 0) + (exercisesCount || 0) + (quizzesCount || 0)
+
+        return {
+          subject_name: subject.name,
+          materials_count: materialsCount || 0,
+          exercises_count: exercisesCount || 0,
+          quizzes_count: quizzesCount || 0,
+          total_count: total,
+          color: subject.color
+        }
+      })
+    )
+
+    // Return only subjects with content
+    return distribution.filter(item => item.total_count > 0)
+
+  } catch (error) {
+    console.error("Error in getSubjectDistribution:", error)
     return []
   }
-
-  return data || []
 }
 
 export async function getRecentActivityFeed(limit = 20) {

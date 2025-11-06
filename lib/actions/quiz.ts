@@ -100,12 +100,14 @@ export async function addQuizQuestion(
   } = await supabase.auth.getUser()
   if (!user) throw new Error("Non autenticato")
 
-  // Check if user is admin
+  // Check if user is admin or teacher
   const { data: userData } = await supabase.from("users").select("role").eq("id", user.id).single()
 
-  if (userData?.role !== "admin") {
-    throw new Error("Solo gli admin possono aggiungere domande")
+  if (userData?.role !== "admin" && userData?.role !== "teacher") {
+    throw new Error("Solo gli admin e i teacher possono aggiungere domande")
   }
+
+  console.log("Adding quiz question:", { quizId, question, userRole: userData?.role })
 
   const { data, error } = await supabase
     .from("quiz_questions")
@@ -116,10 +118,21 @@ export async function addQuizQuestion(
     .select()
     .single()
 
-  if (error) throw error
+  if (error) {
+    console.error("Quiz question insert error:", error)
+    throw error
+  }
 
-  // Update total_questions count
-  await supabase.rpc("increment_quiz_questions", { quiz_id: quizId })
+  console.log("Quiz question inserted successfully:", data)
+
+  // Temporarily comment out the RPC call to isolate the issue
+  try {
+    // await supabase.rpc("increment_quiz_questions", { quiz_id: quizId })
+    console.log("RPC call temporarily skipped")
+  } catch (rpcError) {
+    console.error("RPC error (non-critical):", rpcError)
+    // Don't throw error for RPC failure
+  }
 
   revalidatePath(`/quiz/${quizId}`)
   return data

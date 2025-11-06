@@ -144,6 +144,27 @@ export async function getUserStats(userId: string) {
     .select("*", { count: "exact", head: true })
     .eq("user_id", userId)
 
+  // Get projects count
+  const { count: projectsCount } = await supabase
+    .from("projects")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", userId)
+
+  // Get exercises count
+  const { count: exercisesCount } = await supabase
+    .from("exercises")
+    .select("*", { count: "exact", head: true })
+    .eq("created_by", userId)
+
+  console.log("Stats for user", userId, {
+    quizCount,
+    materialsCount,
+    discussionsCount,
+    commentsCount,
+    projectsCount,
+    exercisesCount
+  })
+
   return {
     xp: user?.xp_points || 0,
     level: user?.level || 1,
@@ -153,7 +174,9 @@ export async function getUserStats(userId: string) {
     materials: materialsCount || 0,
     discussions: discussionsCount || 0,
     comments: commentsCount || 0,
-    totalContributions: (materialsCount || 0) + (discussionsCount || 0) + (commentsCount || 0),
+    projects: projectsCount || 0,
+    exercises: exercisesCount || 0,
+    totalContributions: (materialsCount || 0) + (discussionsCount || 0) + (commentsCount || 0) + (projectsCount || 0) + (exercisesCount || 0),
   }
 }
 

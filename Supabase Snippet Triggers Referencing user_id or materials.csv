@@ -1,0 +1,8 @@
+policyname,permissive,roles,cmd,qual,with_check
+Authenticated users can upload materials,PERMISSIVE,{public},INSERT,null,(auth.uid() = uploaded_by)
+Everyone can view materials,PERMISSIVE,{public},SELECT,true,null
+Teachers and admin can delete any materials,PERMISSIVE,{public},DELETE,"((( SELECT users.role
+   FROM users
+  WHERE (users.id = auth.uid())))::text = ANY ((ARRAY['teacher'::character varying, 'admin'::character varying, 'staff'::character varying])::text[]))",null
+Users can delete own materials,PERMISSIVE,{public},DELETE,(auth.uid() = uploaded_by),null
+Users can update own materials,PERMISSIVE,{public},UPDATE,(auth.uid() = uploaded_by),null

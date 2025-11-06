@@ -48,7 +48,7 @@ export function EditProfileForm({ user }: EditProfileFormProps) {
       await updateUserProfile(formData)
       setSuccess(true)
       setTimeout(() => {
-        router.push("/utente")
+        router.push("/profilo")
         router.refresh()
       }, 1500)
     } catch (err: any) {
@@ -60,7 +60,7 @@ export function EditProfileForm({ user }: EditProfileFormProps) {
   return (
     <Card className="p-8">
       <div className="mb-6">
-        <Link href="/utente">
+        <Link href="/profilo">
           <Button variant="ghost" className="gap-2 mb-4">
             <ArrowLeft className="w-4 h-4" />
             Torna al Profilo
@@ -163,7 +163,7 @@ export function EditProfileForm({ user }: EditProfileFormProps) {
             <Save className="w-4 h-4" />
             {isLoading ? "Salvataggio..." : "Salva Modifiche"}
           </Button>
-          <Link href="/utente">
+          <Link href="/profilo">
             <Button type="button" variant="outline" disabled={isLoading}>
               Annulla
             </Button>

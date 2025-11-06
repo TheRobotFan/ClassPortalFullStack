@@ -95,7 +95,7 @@ export default function RegisterPage() {
             first_name: formData.first_name,
             last_name: formData.last_name,
             full_name: `${formData.first_name} ${formData.last_name}`,
-            birth_date: formData.date_of_birth || null,
+            date_of_birth: formData.date_of_birth || null,
             city: formData.city || null,
             phone: formData.phone || null,
             bio: formData.bio || null,
