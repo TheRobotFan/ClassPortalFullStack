@@ -26,8 +26,8 @@
 
 1. **Clona il repository**
    ```bash
-   git clone https://github.com/tu-utente/clas2e.git
-   cd clas2e
+   git clone https://github.com/TheRobotFan/ClassPortalFullStack.git
+   cd ClassPortalFullStack
    ```
 
 2. **Installa le dipendenze**
@@ -68,7 +68,7 @@ uvicorn app.main:app --reload
 ## 🏗️ Struttura del Progetto
 
 ```
-clas2e/
+ClassPortalFullStack/
 ├── app/                 # App Next.js (pages router)
 ├── badge_ai_system/     # Sistema AI e backend
 ├── components/          # Componenti condivisi
