@@ -12,6 +12,10 @@ export default async function BadgesPage() {
     redirect("/auth/login")
   }
 
+  // Get user role
+  const { data: userRow } = await supabase.from("users").select("role").eq("id", user.id).single()
+  const userRole = userRow?.role || "student"
+
   // Get all available badges
   const { data: allBadges } = await supabase.from("badges").select("*").order("requirement_value", { ascending: true })
 
@@ -24,5 +28,5 @@ export default async function BadgesPage() {
     `)
     .eq("user_id", user.id)
 
-  return <BadgesClient allBadges={allBadges || []} earnedBadges={earnedBadges || []} />
+  return <BadgesClient allBadges={allBadges || []} earnedBadges={earnedBadges || []} userRole={userRole} />
 }

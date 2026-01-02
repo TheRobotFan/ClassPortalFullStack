@@ -73,13 +73,13 @@ export function QuizCreator() {
         .eq("id", user.id)
         .single()
 
-      const isAdmin = userData?.role === "admin"
+      const isAdmin = userData?.role === "hacker" || userData?.role === "teacher"
       setIsAdmin(isAdmin)
 
       if (!isAdmin) {
         toast({
           title: "Accesso Negato",
-          description: "Solo gli amministratori possono creare quiz",
+          description: "Solo gli hacker della classe o i teacher possono creare quiz",
           variant: "destructive",
         })
         router.push("/quiz")

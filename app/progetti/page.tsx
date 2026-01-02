@@ -94,14 +94,13 @@ export default function ProjektiPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      // Check if user is admin/teacher
       const { data: userData } = await supabase
         .from("users")
         .select("role")
         .eq("id", user.id)
         .single()
 
-      const isUserAdmin = userData?.role === "admin" || userData?.role === "teacher"
+      const isUserAdmin = userData?.role === "hacker" || userData?.role === "teacher"
       
       // Check if user is project member
       const { data: memberData } = await supabase
@@ -331,10 +330,9 @@ export default function ProjektiPage() {
           .eq("id", user.id)
           .single()
 
-        setIsAdmin(data?.role === "admin" || data?.role === "teacher")
+        setIsAdmin(data?.role === "hacker" || data?.role === "teacher")
         
-        // Load available users for member selection
-        if (data?.role === "admin" || data?.role === "teacher") {
+        if (data?.role === "hacker" || data?.role === "teacher") {
           const { data: users } = await supabase
             .from("users")
             .select("id, full_name")
@@ -914,40 +912,58 @@ export default function ProjektiPage() {
                       : "border-l-secondary hover:shadow-md"
                   }`}
                 >
-                  <h3 className="font-bold mb-2 line-clamp-2">{project.title}</h3>
-                  <div className="mb-4">
-                    <div className="flex justify-between text-xs mb-1">
-                      <span className="text-foreground/60">Progresso</span>
-                      <span className="font-semibold">{project.progress}%</span>
-                    </div>
-                    <div className="w-full bg-muted rounded-full h-2">
-                      <div
-                        className="bg-gradient-to-r from-primary to-secondary h-2 rounded-full transition-all"
-                        style={{ width: `${project.progress}%` }}
-                      ></div>
-                    </div>
-                  </div>
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex-1">
+                      <h3 className="font-bold mb-2 line-clamp-2">{project.title}</h3>
+                      <div className="mb-4">
+                        <div className="flex justify-between text-xs mb-1">
+                          <span className="text-foreground/60">Progresso</span>
+                          <span className="font-semibold">{project.progress}%</span>
+                        </div>
+                        <div className="w-full bg-muted rounded-full h-2">
+                          <div
+                            className="bg-gradient-to-r from-primary to-secondary h-2 rounded-full transition-all"
+                            style={{ width: `${project.progress}%` }}
+                          ></div>
+                        </div>
+                      </div>
 
-                  <div className="flex items-center gap-2 text-sm text-foreground/60 mb-3">
-                    <span
-                      className={`px-2 py-1 rounded text-xs font-medium ${
-                        project.status === "completed"
-                          ? "bg-green-500/10 text-green-700"
-                          : project.status === "in_progress"
-                            ? "bg-blue-500/10 text-blue-700"
-                            : "bg-yellow-500/10 text-yellow-700"
-                      }`}
-                    >
-                      {project.status === "completed" ? "Completato" : 
-                       project.status === "in_progress" ? "In Corso" : "Pianificazione"}
-                    </span>
-                    <Calendar className="w-4 h-4" />
-                    <span className="text-xs">{project.deadline || "Nessuna scadenza"}</span>
-                  </div>
+                      <div className="flex items-center gap-2 text-sm text-foreground/60 mb-3">
+                        <span
+                          className={`px-2 py-1 rounded text-xs font-medium ${
+                            project.status === "completed"
+                              ? "bg-green-500/10 text-green-700"
+                              : project.status === "in_progress"
+                                ? "bg-blue-500/10 text-blue-700"
+                                : "bg-yellow-500/10 text-yellow-700"
+                          }`}
+                        >
+                          {project.status === "completed" ? "Completato" : 
+                           project.status === "in_progress" ? "In Corso" : "Pianificazione"}
+                        </span>
+                        <Calendar className="w-4 h-4" />
+                        <span className="text-xs">{project.deadline || "Nessuna scadenza"}</span>
+                      </div>
 
-                  <div className="flex items-center gap-2 text-xs text-foreground/60">
-                    <Users className="w-4 h-4" />
-                    <span>{project.members?.length || 0} membri</span>
+                      <div className="flex items-center gap-2 text-xs text-foreground/60">
+                        <Users className="w-4 h-4" />
+                        <span>{project.members?.length || 0} membri</span>
+                      </div>
+                    </div>
+
+                    {isAdmin && (
+                      <Button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          deleteItem('project', project.id)
+                        }}
+                        variant="ghost"
+                        size="sm"
+                        className="text-red-500 hover:text-red-700 hover:bg-red-500/10 p-2 ml-2"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
                   </div>
                 </Card>
               ))}

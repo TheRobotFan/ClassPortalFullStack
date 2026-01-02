@@ -3,6 +3,9 @@ import { Navbar } from "@/components/navbar"
 import { SettingsClient } from "@/components/settings-client"
 import { Card } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { getCurrentUser } from "@/lib/actions/user"
+import { getUserSettings } from "@/lib/actions/settings"
+import { redirect } from "next/navigation"
 
 function SettingsLoading() {
   return (
@@ -26,12 +29,20 @@ function SettingsLoading() {
   )
 }
 
-export default function ImpostazioniPage() {
+export default async function ImpostazioniPage() {
+  const user = await getCurrentUser()
+
+  if (!user) {
+    redirect("/login")
+  }
+
+  const settings = await getUserSettings(user.id)
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
       <Suspense fallback={<SettingsLoading />}>
-        <SettingsClient />
+        <SettingsClient userId={user.id} initialSettings={settings} />
       </Suspense>
     </div>
   )

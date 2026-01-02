@@ -97,3 +97,47 @@ export async function getMaterialComments(materialId: string) {
   if (error) throw error
   return data
 }
+
+export async function deleteForumComment(commentId: string) {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error("Non autenticato")
+
+  const { data: userData } = await supabase.from("users").select("role").eq("id", user.id).single()
+
+  if (userData?.role !== "admin" && userData?.role !== "hacker") {
+    throw new Error("Solo amministratori e hacker possono eliminare commenti")
+  }
+
+  const { error } = await supabase.from("forum_comments").delete().eq("id", commentId)
+
+  if (error) throw error
+
+  revalidatePath("/forum")
+  return { success: true }
+}
+
+export async function deleteMaterialComment(commentId: string) {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error("Non autenticato")
+
+  const { data: userData } = await supabase.from("users").select("role").eq("id", user.id).single()
+
+  if (userData?.role !== "admin" && userData?.role !== "hacker") {
+    throw new Error("Solo amministratori e hacker possono eliminare commenti")
+  }
+
+  const { error } = await supabase.from("material_comments").delete().eq("id", commentId)
+
+  if (error) throw error
+
+  revalidatePath("/appunti")
+  return { success: true }
+}

@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Play, CheckCircle, XCircle, Search, Trophy, Clock, Target, Plus } from "lucide-react"
-import { getQuizzes, getQuizById, submitQuizAttempt } from "@/lib/actions/quiz"
+import { Play, CheckCircle, XCircle, Search, Trophy, Clock, Target, Plus, Trash2 } from "lucide-react"
+import { getQuizzes, getQuizById, submitQuizAttempt, deleteQuiz } from "@/lib/actions/quiz"
 import { useToast } from "@/hooks/use-toast"
 import { Progress } from "@/components/ui/progress"
 import { createClient } from "@/lib/supabase/client"
@@ -59,7 +59,7 @@ export function QuizClient() {
     if (user) {
       const { data } = await supabase.from("users").select("role").eq("id", user.id).single()
 
-      setIsAdmin(data?.role === "admin")
+      setIsAdmin(data?.role === "hacker" || data?.role === "teacher")
     }
   }
 
@@ -82,6 +82,28 @@ export function QuizClient() {
     setResult(null)
     if (data.time_limit) {
       setTimeLeft(data.time_limit * 60) // Convert minutes to seconds
+    }
+  }
+
+  async function handleDeleteQuiz(quizId: string, quizTitle: string) {
+    if (!confirm(`Sei sicuro di voler eliminare il quiz "${quizTitle}"? Questa azione è irreversibile.`)) {
+      return
+    }
+
+    try {
+      await deleteQuiz(quizId)
+      setQuizzes(quizzes.filter(quiz => quiz.id !== quizId))
+      toast({
+        title: "Quiz eliminato",
+        description: `Il quiz "${quizTitle}" è stato eliminato con successo.`,
+      })
+    } catch (error) {
+      console.error("Error deleting quiz:", error)
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante l'eliminazione del quiz.",
+        variant: "destructive",
+      })
     }
   }
 
@@ -421,6 +443,18 @@ export function QuizClient() {
               <Play className="w-4 h-4" />
               Inizia Quiz
             </Button>
+
+            {isAdmin && (
+              <Button
+                onClick={() => handleDeleteQuiz(quiz.id, quiz.title)}
+                variant="destructive"
+                size="sm"
+                className="w-full gap-2 mt-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                Elimina Quiz
+              </Button>
+            )}
           </Card>
         ))}
       </div>

@@ -15,6 +15,45 @@ ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE badges ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_badges ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies so this script can be re-run safely
+DROP POLICY IF EXISTS "Users can view all profiles" ON users;
+DROP POLICY IF EXISTS "Users can update own profile" ON users;
+
+DROP POLICY IF EXISTS "Everyone can view exercises" ON exercises;
+DROP POLICY IF EXISTS "Teachers and admin can create exercises" ON exercises;
+
+DROP POLICY IF EXISTS "Everyone can view comments" ON exercise_comments;
+DROP POLICY IF EXISTS "Authenticated users can comment" ON exercise_comments;
+DROP POLICY IF EXISTS "Users can update own comments" ON exercise_comments;
+
+DROP POLICY IF EXISTS "Everyone can view quizzes" ON quizzes;
+DROP POLICY IF EXISTS "Teachers and admin can create quizzes" ON quizzes;
+
+DROP POLICY IF EXISTS "Authorized users can view questions" ON quiz_questions;
+
+DROP POLICY IF EXISTS "Users can view own attempts" ON quiz_attempts;
+DROP POLICY IF EXISTS "Authenticated users can create attempts" ON quiz_attempts;
+
+DROP POLICY IF EXISTS "Everyone can view discussions" ON forum_discussions;
+DROP POLICY IF EXISTS "Authenticated users can create discussions" ON forum_discussions;
+
+DROP POLICY IF EXISTS "Everyone can view forum comments" ON forum_comments;
+DROP POLICY IF EXISTS "Authenticated users can comment" ON forum_comments;
+
+DROP POLICY IF EXISTS "Everyone can view projects" ON projects;
+DROP POLICY IF EXISTS "Teachers and admin can create projects" ON projects;
+
+DROP POLICY IF EXISTS "Users can view own notifications" ON notifications;
+DROP POLICY IF EXISTS "System can create notifications" ON notifications;
+
+DROP POLICY IF EXISTS "Everyone can view materials" ON materials;
+DROP POLICY IF EXISTS "Teachers and admin can upload materials" ON materials;
+DROP POLICY IF EXISTS "Users can update own materials" ON materials;
+DROP POLICY IF EXISTS "Teachers and admin can delete materials" ON materials;
+
+DROP POLICY IF EXISTS "Everyone can view badges" ON badges;
+DROP POLICY IF EXISTS "Everyone can view earned badges" ON user_badges;
+
 -- Users: Everyone can read, users can update own profile
 CREATE POLICY "Users can view all profiles" ON users
   FOR SELECT USING (true);
@@ -115,3 +154,6 @@ CREATE POLICY "Everyone can view badges" ON badges
 
 CREATE POLICY "Everyone can view earned badges" ON user_badges
   FOR SELECT USING (true);
+
+CREATE POLICY "Users can earn badges" ON user_badges
+  FOR INSERT WITH CHECK (auth.uid() = user_id);

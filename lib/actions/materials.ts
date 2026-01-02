@@ -36,6 +36,10 @@ export type Material = {
 export async function getMaterials(subjectId?: string, status: string = 'active'): Promise<Material[]> {
   const supabase = await createClient()
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
   let query = supabase
     .from("materials")
     .select(`
@@ -43,10 +47,16 @@ export async function getMaterials(subjectId?: string, status: string = 'active'
       subjects:subjects(id, name, color),
       users:users!materials_uploaded_by_fkey(id, full_name, avatar_url)
     `)
-    // Temporaneamente rimossi filtri che causano errore
-    // .eq('"status"', status)
-    // .eq('is_public', true)
+    .eq('status', status)
     .order("created_at", { ascending: false })
+
+  // Utente autenticato: mostra sia i materiali pubblici che i suoi materiali privati
+  if (user) {
+    query = query.or(`is_public.eq.true,uploaded_by.eq.${user.id}`)
+  } else {
+    // Utente anonimo: solo materiali pubblici
+    query = query.eq('is_public', true)
+  }
 
   if (subjectId) {
     query = query.eq("subject_id", subjectId)
@@ -136,8 +146,6 @@ export async function createMaterial(formData: {
 
   if (error) throw error
 
-  await awardXP(user.id, 20, "upload_material")
-
   revalidatePath("/appunti")
   return data
 }
@@ -184,6 +192,16 @@ export async function updateMaterial(id: string, formData: {
   return data
 }
 
+export async function incrementMaterialDownloads(id: string) {
+  const supabase = await createClient()
+
+  const { error } = await supabase.rpc("increment_material_downloads", {
+    material_id: id,
+  })
+
+  if (error) console.error("Error incrementing downloads:", error)
+}
+
 export async function deleteMaterial(id: string) {
   const supabase = await createClient()
 
@@ -192,74 +210,46 @@ export async function deleteMaterial(id: string) {
   } = await supabase.auth.getUser()
   if (!user) throw new Error("Non autenticato")
 
-  // Verifica che l'utente sia il proprietario o admin/teacher
-  const { data: userData } = await supabase
-    .from("users")
-    .select("role")
-    .eq("id", user.id)
-    .single()
+  const { data: userData } = await supabase.from("users").select("role").eq("id", user.id).single()
 
-  const { data: existing } = await supabase
-    .from("materials")
-    .select("uploaded_by")
-    .eq("id", id)
-    .single()
-
-  if (!existing) {
-    throw new Error("Materiale non trovato")
+  if (userData?.role !== "admin" && userData?.role !== "hacker") {
+    throw new Error("Solo amministratori e hacker possono eliminare materiali")
   }
 
-  const isAdminOrTeacher = userData?.role === 'admin' || userData?.role === 'teacher'
-  const isOwner = existing.uploaded_by === user.id
+  // Delete material comments first (due to foreign key constraint)
+  const { error: commentsError } = await supabase
+    .from("material_comments")
+    .delete()
+    .eq("material_id", id)
 
-  if (!isAdminOrTeacher && !isOwner) {
-    throw new Error("Non autorizzato a eliminare questo materiale")
+  if (commentsError) {
+    console.error("Error deleting material comments:", commentsError)
+    throw new Error("Errore nell'eliminazione dei commenti del materiale")
   }
 
-  const { error } = await supabase
+  // Delete the material
+  const { error: materialError } = await supabase
     .from("materials")
     .delete()
     .eq("id", id)
 
-  if (error) throw error
+  if (materialError) {
+    console.error("Error deleting material:", materialError)
+    throw new Error("Errore nell'eliminazione del materiale")
+  }
 
   revalidatePath("/appunti")
-}
-
-export async function incrementMaterialDownloads(id: string) {
-  const supabase = await createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  const { error } = await supabase.rpc("increment_material_downloads", {
-    material_id: id,
-  })
-
-  if (error) console.error("Error incrementing downloads:", error)
-
-  if (user) {
-    await awardXP(user.id, 5, "download_material")
-  }
+  return { success: true }
 }
 
 export async function incrementMaterialViews(id: string) {
   const supabase = await createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
 
   const { error } = await supabase.rpc("increment_material_views", {
     material_id: id,
   })
 
   if (error) console.error("Error incrementing views:", error)
-
-  if (user) {
-    await awardXP(user.id, 1, "view_material")
-  }
 }
 
 export async function searchMaterials(query: string, subjectId?: string): Promise<Material[]> {

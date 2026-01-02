@@ -1,0 +1,1 @@
+# AI Badge System Package

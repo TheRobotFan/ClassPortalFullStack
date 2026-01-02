@@ -5,10 +5,13 @@ import { useUser } from "./use-user"
 export function useUserRole() {
   const { user, loading } = useUser()
 
-  const isAdmin = user?.role === "admin"
-  const isStaff = user?.role === "staff"
-  const isTeacher = user?.role === "teacher"
-  const isStudent = user?.role === "student"
+  const role = user?.role as string | undefined
+
+  const isAdmin = role === "admin"
+  const isStaff = role === "staff"
+  const isTeacher = role === "teacher"
+  const isStudent = role === "student"
+  const isHacker = role === "hacker"
 
   return {
     user,
@@ -17,6 +20,7 @@ export function useUserRole() {
     isStaff,
     isTeacher,
     isStudent,
-    canAccessDashboard: isAdmin || isStaff,
+    isHacker,
+    canAccessDashboard: isAdmin || isStaff || isHacker,
   }
 }

@@ -21,8 +21,30 @@ export default async function ProfiloPage() {
     redirect("/auth/login")
   }
 
-  // Fetch user stats, badges, and contributions
-  const [stats, badges] = await Promise.all([getUserStats(user.id), getUserBadges(user.id)])
+  // Fetch user stats, badges, and contributions (tollerando eventuali errori)
+  let stats: Awaited<ReturnType<typeof getUserStats>> | null = null
+  let badges: Awaited<ReturnType<typeof getUserBadges>> | null = null
 
-  return <ProfiloClient user={user} stats={stats} badges={badges} />
+  try {
+    ;[stats, badges] = await Promise.all([getUserStats(user.id), getUserBadges(user.id)])
+  } catch (error) {
+    console.error("Error loading profile data:", error)
+    // Valori di fallback per evitare il crash della pagina
+    stats = {
+      xp: (user as any).xp_points ?? 0,
+      level: (user as any).level ?? 1,
+      streak: 0,
+      totalActiveDays: 0,
+      quizzes: 0,
+      materials: 0,
+      discussions: 0,
+      comments: 0,
+      projects: 0,
+      exercises: 0,
+      totalContributions: 0,
+    }
+    badges = []
+  }
+
+  return <ProfiloClient user={user} stats={stats} badges={badges ?? []} />
 }

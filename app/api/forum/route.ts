@@ -6,8 +6,19 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
   const subject = searchParams.get("subject")
   const search = searchParams.get("search")
+  const id = searchParams.get("id")
 
   let query = supabase.from("forum_discussions").select("*, users(full_name, avatar_url), subjects(name)")
+
+  if (id) {
+    const { data, error } = await query.eq("id", id).single()
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    return NextResponse.json(data)
+  }
 
   if (subject) query = query.eq("subject_id", subject)
   if (search) query = query.ilike("title", `%${search}%`)

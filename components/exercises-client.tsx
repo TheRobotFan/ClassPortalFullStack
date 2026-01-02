@@ -3,13 +3,14 @@
 import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Heart, MessageCircle, Share2, Filter, Plus, Zap, Eye } from "lucide-react"
+import { Heart, MessageCircle, Share2, Filter, Plus, Zap, Eye, Trash2 } from "lucide-react"
 import Link from "next/link"
-import { getExercises, incrementExerciseViews } from "@/lib/actions/exercises"
-import { submitExerciseComment, likeExercise } from "@/app/actions/exercises"
+import { getExercises, incrementExerciseViews, deleteExercise } from "@/lib/actions/exercises"
+import { submitExerciseComment, likeExercise, unlikeExercise } from "@/app/actions/exercises"
 import { awardXP } from "@/lib/actions/gamification"
 import { createClient } from "@/lib/supabase/client"
 import { useToast } from "@/hooks/use-toast"
+import { deleteMaterialComment } from "@/lib/actions/comments"
 
 type Exercise = {
   id: string
@@ -61,7 +62,7 @@ export function ExercisesClient() {
     } = await supabase.auth.getUser()
     if (user) {
       const { data } = await supabase.from("users").select("role").eq("id", user.id).single()
-      setIsAdmin(data?.role === "admin" || data?.role === "teacher")
+      setIsAdmin(data?.role === "hacker" || data?.role === "teacher")
     }
   }
 
@@ -97,19 +98,21 @@ export function ExercisesClient() {
 
   async function toggleLike(exerciseId: string) {
     if (liked.includes(exerciseId)) {
+      // Remove like
       setLiked((prev) => prev.filter((id) => id !== exerciseId))
+      await unlikeExercise(exerciseId)
+      toast({
+        title: "Like rimosso",
+        description: "Hai tolto il like dall'esercizio",
+      })
+      loadExercises()
     } else {
+      // Add like
       setLiked((prev) => [...prev, exerciseId])
       await likeExercise(exerciseId)
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (user) {
-        await awardXP(user.id, 1, "like_exercise")
-      }
       toast({
         title: "Like aggiunto!",
-        description: "+1 XP guadagnato",
+        description: "Hai messo like all'esercizio",
       })
       loadExercises()
     }
@@ -129,16 +132,9 @@ export function ExercisesClient() {
       return
     }
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    if (user) {
-      await awardXP(user.id, 3, "comment_exercise")
-    }
-
     toast({
       title: "Commento aggiunto!",
-      description: "+3 XP guadagnati",
+      description: "Commento pubblicato con successo",
     })
 
     setCommentText((prev) => ({ ...prev, [exerciseId]: "" }))
@@ -153,6 +149,51 @@ export function ExercisesClient() {
       if (!comments[exerciseId]) {
         await loadComments(exerciseId)
       }
+    }
+  }
+
+  async function handleDeleteExercise(exerciseId: string, exerciseTitle: string) {
+    if (!confirm(`Sei sicuro di voler eliminare l'esercizio "${exerciseTitle}"? Questa azione è irreversibile.`)) {
+      return
+    }
+
+    try {
+      await deleteExercise(exerciseId)
+      setExercises(exercises.filter(exercise => exercise.id !== exerciseId))
+      toast({
+        title: "Esercizio eliminato",
+        description: `L'esercizio "${exerciseTitle}" è stato eliminato con successo.`,
+      })
+    } catch (error) {
+      console.error("Error deleting exercise:", error)
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante l'eliminazione dell'esercizio.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  async function handleDeleteMaterialComment(commentId: string) {
+    if (!confirm("Sei sicuro di voler eliminare questo commento? Questa azione è irreversibile.")) {
+      return
+    }
+
+    try {
+      await deleteMaterialComment(commentId)
+      // Reload comments for the current exercise
+      loadComments(expandedComments)
+      toast({
+        title: "Commento eliminato",
+        description: "Il commento è stato eliminato con successo.",
+      })
+    } catch (error) {
+      console.error("Error deleting comment:", error)
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante l'eliminazione del commento.",
+        variant: "destructive",
+      })
     }
   }
 
@@ -282,9 +323,24 @@ export function ExercisesClient() {
                   {exercise.created_by_user && <span>👤 {exercise.created_by_user.full_name || "Anonimo"}</span>}
                 </div>
               </div>
-              <div className="text-right text-sm text-foreground/60 flex items-center gap-1">
-                <Eye className="w-4 h-4" />
-                <span>{exercise.views_count}</span>
+              <div className="flex items-center gap-3">
+                <div className="text-right text-sm text-foreground/60 flex items-center gap-1">
+                  <Eye className="w-4 h-4" />
+                  <span>{exercise.views_count}</span>
+                </div>
+                {isAdmin && (
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleDeleteExercise(exercise.id, exercise.title)
+                    }}
+                    variant="ghost"
+                    size="sm"
+                    className="text-red-500 hover:text-red-700 hover:bg-red-500/10 p-2"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                )}
               </div>
             </div>
 
@@ -372,6 +428,16 @@ export function ExercisesClient() {
                             {new Date(comment.created_at).toLocaleDateString("it-IT")}
                           </p>
                         </div>
+                        {isAdmin && (
+                          <Button
+                            onClick={() => handleDeleteMaterialComment(comment.id)}
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-500 hover:text-red-700 hover:bg-red-500/10 p-2 ml-auto"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
                       </div>
                       <p className="text-sm text-foreground/80">{comment.content}</p>
                     </div>

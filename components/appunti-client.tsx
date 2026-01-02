@@ -119,7 +119,7 @@ export function AppuntiClient() {
     if (user) {
       const { data } = await supabase.from("users").select("role").eq("id", user.id).single()
 
-      setIsAdmin(data?.role === "admin" || data?.role === "teacher")
+      setIsAdmin(data?.role === "hacker" || data?.role === "teacher")
     }
   }
 
@@ -188,21 +188,24 @@ export function AppuntiClient() {
         } = supabase.storage.from("materials").getPublicUrl(fileName)
 
         // Create material record
+        const tagsInput = formData.get("tags") as string
+        const tags = tagsInput ? tagsInput.split(',').map((tag: string) => tag.trim()).filter(Boolean) : []
+        const isPublic = formData.get("is_public") === "true"
+
         const { error: insertError } = await supabase.from("materials").insert({
           title,
           description,
           subject_id: subjectId,
           file_url: publicUrl || '',
-          file_type: file.type.length > 50 ? file.type.substring(0, 50) : file.type,
+          file_type: file.type.length > 100 ? file.type.substring(0, 100) : file.type,
           file_size: file.size,
           uploaded_by: user.id,
-          // Temporaneamente rimosso user_id per errore cache
-          // user_id: user.id,
           downloads_count: 0,
           views_count: 0,
-          // Temporaneamente rimossi i campi che causano errore
-          // tags: formData.get("tags") ? (formData.get("tags") as string).split(',').map((tag: string) => tag.trim()).filter(Boolean) : [],
-          // is_public: formData.get("is_public") === "true",
+          tags: tags,
+          is_public: isPublic,
+          status: 'active',
+          version: 1
         })
 
         if (insertError) throw insertError
@@ -545,7 +548,7 @@ export function AppuntiClient() {
                       Scarica
                     </Button>
                     
-                    {(currentUserId === (material as any).uploaded_by || isAdmin) && (
+                    {isAdmin && (
                       <>
                         <Button
                           variant="outline"

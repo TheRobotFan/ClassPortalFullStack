@@ -13,10 +13,10 @@ export default async function FeaturedContributorsPage() {
     redirect("/auth/login")
   }
 
-  // Check if user is admin
+  // Consenti l'accesso a questa pagina ad admin e hacker
   const { data: userData } = await supabase.from("users").select("role").eq("id", user.id).single()
 
-  if (userData?.role !== "admin") {
+  if (userData?.role !== "admin" && userData?.role !== "hacker") {
     redirect("/dashboard")
   }
 

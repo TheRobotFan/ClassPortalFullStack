@@ -9,21 +9,29 @@ const nextConfig = {
   images: {
     // Disabilita l'ottimizzazione immagini per il deployment statico
     unoptimized: true,
-    
-    // Domini consentiti per le immagini
-    domains: [
-      'ojbpfjpgriplodjkhnyv.supabase.co',  // Dominio Supabase
-      'ojbpfjpgriplodjkhnyv.supabase.in',  // Dominio alternativo Supabase
-      'lh3.googleusercontent.com',        // Per avatar Google
-      'avatars.githubusercontent.com'     // Per avatar GitHub
+
+    // Domini consentiti per le immagini (Next 16 usa remotePatterns)
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: process.env.NEXT_PUBLIC_SUPABASE_URL?.replace('https://', '') || 'your-supabase-domain.supabase.co',
+      },
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com', // Per avatar Google
+      },
+      {
+        protocol: 'https',
+        hostname: 'avatars.githubusercontent.com', // Per avatar GitHub
+      },
     ],
-    
+
     // Formati immagine supportati
     formats: ['image/avif', 'image/webp'],
-    
-    // Dimensione massima del file immagine (in byte)
+
+    // Dimensione massima del file immagine (in pixel)
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384]
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
   
   // Configurazione di sicurezza
@@ -51,18 +59,6 @@ const nextConfig = {
   
   // Abilita il supporto a React Strict Mode
   reactStrictMode: true,
-  
-  // Configurazione per il supporto PWA (opzionale)
-  // Nota: Richiede next-pwa
-  pwa: {
-    dest: 'public',
-    disable: process.env.NODE_ENV === 'development',
-  },
-  
-  // Abilita il supporto a Webpack 5
-  future: {
-    webpack5: true,
-  },
   
   // Configurazione per l'export statico (se necessario)
   output: 'standalone',

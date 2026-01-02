@@ -72,7 +72,7 @@ export default function RegisterPage() {
         email: formData.email,
         password: formData.password,
         options: {
-          emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/dashboard`,
+          emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/guida`,
           data: {
             first_name: formData.first_name,
             last_name: formData.last_name,
@@ -111,7 +111,21 @@ export default function RegisterPage() {
           console.error("[v0] Error updating user profile:", updateError)
         }
 
-        router.push(`/utente/${data.user.id}`)
+        // Award initial XP and trigger badge checks for new users (best-effort)
+        try {
+          await supabase.rpc("add_user_xp", {
+            user_id: data.user.id,
+            xp_amount: 50,
+          })
+          await supabase.rpc("check_and_award_badges", {
+            user_id: data.user.id,
+          })
+        } catch (xpError) {
+          console.error("Error awarding initial XP/badges:", xpError)
+        }
+
+        // Porta il nuovo utente alla pagina guida invece che alla dashboard/admin
+        router.push("/guida")
       }
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "Errore durante la registrazione")

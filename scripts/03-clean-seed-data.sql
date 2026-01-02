@@ -2,7 +2,7 @@
 -- This script removes all fake seed data and keeps only the subjects and real user
 
 -- Delete all fake users except the real one
-DELETE FROM users WHERE email NOT IN ('abdelghafourboucham327@gmail.com');
+DELETE FROM users WHERE email NOT IN ('${ADMIN_EMAIL}');
 
 -- Delete all fake exercises
 DELETE FROM exercises;

@@ -50,6 +50,11 @@ interface DashboardClientProps {
     forumCount: number
     totalViews: number
     totalContent: number
+    studentsCount?: number
+    teachersCount?: number
+    hackersCount?: number
+    adminsCount?: number
+    activeTodayCount?: number
   }
   topContributors: Array<{
     id: string
@@ -95,13 +100,15 @@ export function DashboardClient({
   const [activeTab, setActiveTab] = useState("overview")
   const [searchQuery, setSearchQuery] = useState("")
   const isAdmin = user.role === "admin"
+  const isHacker = user.role === "hacker"
+  const dashboardTitle = isHacker ? "Dashboard Hacker / Admin" : isAdmin ? "Dashboard Admin" : "Dashboard Insegnante"
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">{isAdmin ? "Dashboard Admin" : "Dashboard Insegnante"}</h1>
+          <h1 className="text-3xl font-bold mb-2">{dashboardTitle}</h1>
           <p className="text-foreground/70">Benvenuto, {user.full_name}</p>
         </div>
 
@@ -153,7 +160,7 @@ export function DashboardClient({
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="users">Utenti</TabsTrigger>
             <TabsTrigger value="content">Contenuti</TabsTrigger>
-            <TabsTrigger value="settings">Impostazioni</TabsTrigger>
+            {isHacker && <TabsTrigger value="settings">Impostazioni</TabsTrigger>}
           </TabsList>
 
           {/* Overview Tab */}
@@ -478,15 +485,15 @@ export function DashboardClient({
                   </Card>
                   <Card className="p-4 bg-green-500/10">
                     <p className="text-sm text-foreground/60 mb-1">Studenti</p>
-                    <p className="text-2xl font-bold text-green-600">{stats.usersCount - 1}</p>
+                    <p className="text-2xl font-bold text-green-600">{stats.studentsCount ?? stats.usersCount}</p>
                   </Card>
                   <Card className="p-4 bg-purple-500/10">
                     <p className="text-sm text-foreground/60 mb-1">Insegnanti</p>
-                    <p className="text-2xl font-bold text-purple-600">1</p>
+                    <p className="text-2xl font-bold text-purple-600">{stats.teachersCount ?? 0}</p>
                   </Card>
                   <Card className="p-4 bg-amber-500/10">
                     <p className="text-sm text-foreground/60 mb-1">Attivi Oggi</p>
-                    <p className="text-2xl font-bold text-amber-600">{Math.min(stats.usersCount, 3)}</p>
+                    <p className="text-2xl font-bold text-amber-600">{stats.activeTodayCount ?? 0}</p>
                   </Card>
                 </div>
 
@@ -649,98 +656,100 @@ export function DashboardClient({
             </Card>
           </TabsContent>
 
-          {/* Settings Tab */}
-          <TabsContent value="settings" className="space-y-6">
-            <Card className="p-6">
-              <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-                <Settings className="w-5 h-5" />
-                Impostazioni Dashboard
-              </h2>
+          {/* Settings Tab - solo per hacker (funzioni avanzate) */}
+          {isHacker && (
+            <TabsContent value="settings" className="space-y-6">
+              <Card className="p-6">
+                <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+                  <Settings className="w-5 h-5" />
+                  Impostazioni Dashboard
+                </h2>
 
-              <div className="space-y-6">
-                <div>
-                  <h3 className="font-semibold mb-3">Preferenze Generali</h3>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between p-4 bg-card border border-border rounded-lg">
-                      <div>
-                        <p className="font-medium">Notifiche Email</p>
-                        <p className="text-sm text-foreground/60">Ricevi aggiornamenti via email</p>
-                      </div>
-                      <Button variant="outline" size="sm">
-                        Configura
-                      </Button>
-                    </div>
-
-                    <div className="flex items-center justify-between p-4 bg-card border border-border rounded-lg">
-                      <div>
-                        <p className="font-medium">Gestione Contributori</p>
-                        <p className="text-sm text-foreground/60">Gestisci i contributori in evidenza</p>
-                      </div>
-                      <Link href="/dashboard/featured">
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="font-semibold mb-3">Preferenze Generali</h3>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between p-4 bg-card border border-border rounded-lg">
+                        <div>
+                          <p className="font-medium">Notifiche Email</p>
+                          <p className="text-sm text-foreground/60">Ricevi aggiornamenti via email</p>
+                        </div>
                         <Button variant="outline" size="sm">
-                          Gestisci
+                          Configura
+                        </Button>
+                      </div>
+
+                      <div className="flex items-center justify-between p-4 bg-card border border-border rounded-lg">
+                        <div>
+                          <p className="font-medium">Gestione Contributori</p>
+                          <p className="text-sm text-foreground/60">Gestisci i contributori in evidenza</p>
+                        </div>
+                        <Link href="/dashboard/featured">
+                          <Button variant="outline" size="sm">
+                            Gestisci
+                          </Button>
+                        </Link>
+                      </div>
+
+                      <div className="flex items-center justify-between p-4 bg-card border border-border rounded-lg">
+                        <div>
+                          <p className="font-medium">Backup Database</p>
+                          <p className="text-sm text-foreground/60">Esporta i dati del portale</p>
+                        </div>
+                        <Button variant="outline" size="sm">
+                          Esporta
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="font-semibold mb-3">Statistiche Avanzate</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <Card className="p-4">
+                        <p className="text-sm text-foreground/60 mb-1">Tasso di Crescita Utenti</p>
+                        <p className="text-2xl font-bold text-green-600">+{Math.max(0, stats.usersCount - 1)}%</p>
+                        <p className="text-xs text-foreground/50 mt-1">ultimi 30 giorni</p>
+                      </Card>
+                      <Card className="p-4">
+                        <p className="text-sm text-foreground/60 mb-1">Engagement Medio</p>
+                        <p className="text-2xl font-bold text-blue-600">
+                          {stats.totalContent > 0 ? Math.round((stats.totalViews / stats.totalContent) * 10) / 10 : 0}
+                        </p>
+                        <p className="text-xs text-foreground/50 mt-1">views per contenuto</p>
+                      </Card>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="font-semibold mb-3">Collegamenti Rapidi</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <Link href="/utente">
+                        <Button variant="outline" className="w-full bg-transparent">
+                          Il Mio Profilo
+                        </Button>
+                      </Link>
+                      <Link href="/forum">
+                        <Button variant="outline" className="w-full bg-transparent">
+                          Forum
+                        </Button>
+                      </Link>
+                      <Link href="/progetti">
+                        <Button variant="outline" className="w-full bg-transparent">
+                          Progetti
+                        </Button>
+                      </Link>
+                      <Link href="/ai">
+                        <Button variant="outline" className="w-full bg-transparent">
+                          Assistente IA
                         </Button>
                       </Link>
                     </div>
-
-                    <div className="flex items-center justify-between p-4 bg-card border border-border rounded-lg">
-                      <div>
-                        <p className="font-medium">Backup Database</p>
-                        <p className="text-sm text-foreground/60">Esporta i dati del portale</p>
-                      </div>
-                      <Button variant="outline" size="sm">
-                        Esporta
-                      </Button>
-                    </div>
                   </div>
                 </div>
-
-                <div>
-                  <h3 className="font-semibold mb-3">Statistiche Avanzate</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <Card className="p-4">
-                      <p className="text-sm text-foreground/60 mb-1">Tasso di Crescita Utenti</p>
-                      <p className="text-2xl font-bold text-green-600">+{Math.max(0, stats.usersCount - 1)}%</p>
-                      <p className="text-xs text-foreground/50 mt-1">ultimi 30 giorni</p>
-                    </Card>
-                    <Card className="p-4">
-                      <p className="text-sm text-foreground/60 mb-1">Engagement Medio</p>
-                      <p className="text-2xl font-bold text-blue-600">
-                        {stats.totalContent > 0 ? Math.round((stats.totalViews / stats.totalContent) * 10) / 10 : 0}
-                      </p>
-                      <p className="text-xs text-foreground/50 mt-1">views per contenuto</p>
-                    </Card>
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="font-semibold mb-3">Collegamenti Rapidi</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <Link href="/utente">
-                      <Button variant="outline" className="w-full bg-transparent">
-                        Il Mio Profilo
-                      </Button>
-                    </Link>
-                    <Link href="/forum">
-                      <Button variant="outline" className="w-full bg-transparent">
-                        Forum
-                      </Button>
-                    </Link>
-                    <Link href="/progetti">
-                      <Button variant="outline" className="w-full bg-transparent">
-                        Progetti
-                      </Button>
-                    </Link>
-                    <Link href="/ai">
-                      <Button variant="outline" className="w-full bg-transparent">
-                        Assistente IA
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          </TabsContent>
+              </Card>
+            </TabsContent>
+          )}
         </Tabs>
       </div>
     </div>

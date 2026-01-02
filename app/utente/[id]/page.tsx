@@ -14,7 +14,12 @@ export default async function UserProfilePage({ params }: { params: { id: string
     redirect("/auth/login")
   }
 
-  if (authUser.id !== params.id) {
+  const { data: authRow } = await supabase.from("users").select("role").eq("id", authUser.id).single()
+
+  const role = authRow?.role || "student"
+  const canViewOthers = role === "admin" || role === "hacker" || role === "teacher" || role === "staff"
+
+  if (!canViewOthers && authUser.id !== params.id) {
     redirect(`/utente/${authUser.id}`)
   }
 

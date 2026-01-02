@@ -119,3 +119,43 @@ export async function createForumComment(discussionId: string, content: string) 
   revalidatePath(`/forum/${discussionId}`)
   return data
 }
+
+export async function deleteDiscussion(id: string) {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error("Non autenticato")
+
+  const { data: userData } = await supabase.from("users").select("role").eq("id", user.id).single()
+
+  if (userData?.role !== "admin" && userData?.role !== "hacker") {
+    throw new Error("Solo amministratori e hacker possono eliminare discussioni")
+  }
+
+  // Delete comments first (due to foreign key constraint)
+  const { error: commentsError } = await supabase
+    .from("forum_comments")
+    .delete()
+    .eq("discussion_id", id)
+
+  if (commentsError) {
+    console.error("Error deleting forum comments:", commentsError)
+    throw new Error("Errore nell'eliminazione dei commenti della discussione")
+  }
+
+  // Delete the discussion
+  const { error: discussionError } = await supabase
+    .from("forum_discussions")
+    .delete()
+    .eq("id", id)
+
+  if (discussionError) {
+    console.error("Error deleting forum discussion:", discussionError)
+    throw new Error("Errore nell'eliminazione della discussione")
+  }
+
+  revalidatePath("/forum")
+  return { success: true }
+}

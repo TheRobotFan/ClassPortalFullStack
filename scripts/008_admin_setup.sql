@@ -2,12 +2,12 @@
 -- SETUP ADMIN USER
 -- ============================================
 -- This script will make your user an admin
--- Replace 'abdelghafourboucham327@gmail.com' with your actual email if different
+-- Replace '${ADMIN_EMAIL}' with your actual email if different
 
 -- Update the user role to admin
 UPDATE users 
 SET role = 'admin' 
-WHERE email = 'abdelghafourboucham327@gmail.com';
+WHERE email = '${ADMIN_EMAIL}';
 
 -- Verify the admin was created
 SELECT id, email, full_name, role 

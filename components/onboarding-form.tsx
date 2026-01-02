@@ -44,7 +44,7 @@ export function OnboardingForm({ user, authUser }: OnboardingFormProps) {
       }
 
       await completeUserProfile(formData)
-      router.push("/dashboard")
+      router.push("/guida")
       router.refresh()
     } catch (err: any) {
       setError(err.message || "Errore durante il salvataggio del profilo")

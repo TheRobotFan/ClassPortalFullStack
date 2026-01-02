@@ -5,6 +5,12 @@ import { revalidatePath } from "next/cache"
 
 export async function awardXP(userId: string, xpAmount: number, reason: string) {
   const supabase = await createClient()
+  // Do not award XP to admins
+  const { data: userRow } = await supabase.from("users").select("role, xp_points, level").eq("id", userId).single()
+
+  if (userRow?.role === "admin") {
+    return { success: false, xp: 0, leveledUp: false }
+  }
 
   const { data, error: xpError } = await supabase.rpc("add_user_xp", {
     user_id: userId,

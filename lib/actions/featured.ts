@@ -7,22 +7,7 @@ export async function getFeaturedContributors() {
 
   const { data, error } = await supabase
     .from("featured_contributors")
-    .select(`
-      id,
-      user_id,
-      contributions,
-      stars,
-      display_order,
-      created_at,
-      updated_at,
-      users (
-        id,
-        full_name,
-        avatar_url,
-        xp_points,
-        level
-      )
-    `)
+    .select("id, user_id, contributions, stars, display_order, created_at, updated_at")
     .order("display_order", { ascending: true })
 
   if (error) {
@@ -36,10 +21,10 @@ export async function getFeaturedContributors() {
     contributions: item.contributions,
     stars: item.stars,
     display_order: item.display_order,
-    full_name: item.users?.full_name || "Utente",
-    avatar_url: item.users?.avatar_url,
-    xp_points: item.users?.xp_points || 0,
-    level: item.users?.level || 1,
+    full_name: "Utente",
+    avatar_url: null,
+    xp_points: 0,
+    level: 1,
   }))
 }
 

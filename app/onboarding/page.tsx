@@ -17,7 +17,7 @@ export default async function OnboardingPage() {
   const { data: user } = await supabase.from("users").select("*").eq("id", authUser.id).single()
 
   if (user?.profile_completed) {
-    redirect("/dashboard")
+    redirect("/guida")
   }
 
   return (

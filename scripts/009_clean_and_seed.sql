@@ -4,31 +4,31 @@
 
 -- Keep only the real user (delete any test data)
 DELETE FROM user_badges WHERE user_id NOT IN (
-  SELECT id FROM users WHERE email = 'abdelghafourboucham327@gmail.com'
+  SELECT id FROM users WHERE email = '${ADMIN_EMAIL}'
 );
 
 DELETE FROM quiz_attempts WHERE user_id NOT IN (
-  SELECT id FROM users WHERE email = 'abdelghafourboucham327@gmail.com'
+  SELECT id FROM users WHERE email = '${ADMIN_EMAIL}'
 );
 
 DELETE FROM exercise_comments WHERE user_id NOT IN (
-  SELECT id FROM users WHERE email = 'abdelghafourboucham327@gmail.com'
+  SELECT id FROM users WHERE email = '${ADMIN_EMAIL}'
 );
 
 DELETE FROM forum_comments WHERE user_id NOT IN (
-  SELECT id FROM users WHERE email = 'abdelghafourboucham327@gmail.com'
+  SELECT id FROM users WHERE email = '${ADMIN_EMAIL}'
 );
 
 DELETE FROM material_comments WHERE user_id NOT IN (
-  SELECT id FROM users WHERE email = 'abdelghafourboucham327@gmail.com'
+  SELECT id FROM users WHERE email = '${ADMIN_EMAIL}'
 );
 
 DELETE FROM forum_discussions WHERE user_id NOT IN (
-  SELECT id FROM users WHERE email = 'abdelghafourboucham327@gmail.com'
+  SELECT id FROM users WHERE email = '${ADMIN_EMAIL}'
 );
 
 DELETE FROM materials WHERE uploaded_by NOT IN (
-  SELECT id FROM users WHERE email = 'abdelghafourboucham327@gmail.com'
+  SELECT id FROM users WHERE email = '${ADMIN_EMAIL}'
 );
 
 DELETE FROM quiz_questions;
@@ -40,7 +40,7 @@ DELETE FROM projects;
 DELETE FROM featured_contributors;
 
 -- Delete fake users (keep only the real one)
-DELETE FROM users WHERE email != 'abdelghafourboucham327@gmail.com';
+DELETE FROM users WHERE email != '${ADMIN_EMAIL}';
 
 -- Clear subjects and re-insert them
 DELETE FROM subjects;

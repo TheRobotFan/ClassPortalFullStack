@@ -24,15 +24,16 @@ export default function LoginPage() {
     setLoading(true)
     setError(null)
 
+    // Debug: check if environment variables are loaded
+    console.log("Supabase URL:", process.env.NEXT_PUBLIC_SUPABASE_URL)
+    console.log("Supabase Key exists:", !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+
     const supabase = createClient()
 
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
-        options: {
-          emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/dashboard`,
-        },
       })
 
       if (error) throw error

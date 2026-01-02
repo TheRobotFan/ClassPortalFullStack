@@ -75,16 +75,24 @@ export async function completeUserProfile(formData: {
 
   if (error) throw error
 
-  // Award XP for completing profile
-  await supabase.rpc("add_user_xp", {
-    user_id: user.id,
-    xp_amount: 100,
-  })
+  // Award XP for completing profile (best-effort: non bloccare se fallisce)
+  try {
+    await supabase.rpc("add_user_xp", {
+      user_id: user.id,
+      xp_amount: 100,
+    })
+  } catch (xpError) {
+    console.error("Error awarding XP for profile completion:", xpError)
+  }
 
-  // Check for badges
-  await supabase.rpc("check_and_award_badges", {
-    user_id: user.id,
-  })
+  // Check for badges (best-effort)
+  try {
+    await supabase.rpc("check_and_award_badges", {
+      user_id: user.id,
+    })
+  } catch (badgeError) {
+    console.error("Error checking/awarding badges after profile completion:", badgeError)
+  }
 
   revalidatePath("/utente")
   revalidatePath("/dashboard")

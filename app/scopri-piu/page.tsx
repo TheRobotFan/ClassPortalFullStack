@@ -1,12 +1,12 @@
-"use client"
-
 import { Navbar } from "@/components/navbar"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Users, BookOpen, Award, Calendar, MapPin, Mail, Phone } from "lucide-react"
+import { getDashboardStats } from "@/lib/actions/dashboard"
 
-export default function ScopriPiuPage() {
+export default async function ScopriPiuPage() {
+  const stats = await getDashboardStats()
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -37,8 +37,8 @@ export default function ScopriPiuPage() {
                 <p className="font-semibold">Informatica e Telecomunicazioni</p>
               </div>
               <div>
-                <p className="text-sm text-foreground/60 mb-1">Numero Studenti</p>
-                <p className="font-semibold">28 Studenti</p>
+                <p className="text-sm text-foreground/60 mb-1">Numero studenti registrati</p>
+                <p className="font-semibold">{stats.usersCount || 0} studenti</p>
               </div>
               <div>
                 <p className="text-sm text-foreground/60 mb-1">Coordinatore</p>
@@ -57,7 +57,7 @@ export default function ScopriPiuPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-foreground/60 mb-1">Esercizi</p>
-                  <p className="text-3xl font-bold text-primary">128</p>
+                  <p className="text-3xl font-bold text-primary">{stats.exercisesCount || 0}</p>
                 </div>
                 <BookOpen className="w-8 h-8 text-primary/40" />
               </div>
@@ -65,8 +65,8 @@ export default function ScopriPiuPage() {
             <Card className="p-6 bg-card/50">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-foreground/60 mb-1">Discussioni Attive</p>
-                  <p className="text-3xl font-bold text-secondary">45</p>
+                  <p className="text-sm text-foreground/60 mb-1">Discussioni attive</p>
+                  <p className="text-3xl font-bold text-secondary">{stats.forumCount || 0}</p>
                 </div>
                 <Users className="w-8 h-8 text-secondary/40" />
               </div>
@@ -74,8 +74,8 @@ export default function ScopriPiuPage() {
             <Card className="p-6 bg-card/50">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-foreground/60 mb-1">Appunti Condivisi</p>
-                  <p className="text-3xl font-bold text-primary">92</p>
+                  <p className="text-sm text-foreground/60 mb-1">Appunti condivisi</p>
+                  <p className="text-3xl font-bold text-primary">{stats.materialsCount || 0}</p>
                 </div>
                 <Award className="w-8 h-8 text-primary/40" />
               </div>
@@ -90,9 +90,9 @@ export default function ScopriPiuPage() {
             <div>
               <h3 className="font-semibold mb-3 text-primary">Cos'è?</h3>
               <p className="leading-relaxed">
-                Il Portale della Classe 1R è una piattaforma digitale moderna creata per facilitare la collaborazione e
-                l'apprendimento condiviso tra studenti e docenti. È uno spazio virtuale dove condividere risorse,
-                discutere di argomenti scolastici e lavorare insieme su progetti.
+                Il Portale della Classe 1R è una piattaforma digitale moderna creata dai rappresentanti di classe per
+                facilitare la collaborazione e l'apprendimento condiviso tra studenti. È uno spazio virtuale dove
+                condividere risorse, discutere di argomenti scolastici e lavorare insieme su progetti.
               </p>
             </div>
             <div>
@@ -121,7 +121,7 @@ export default function ScopriPiuPage() {
             <Card className="p-6 text-center">
               <Users className="w-8 h-8 text-secondary mx-auto mb-3" />
               <h3 className="font-semibold mb-2">Forum</h3>
-              <p className="text-sm text-foreground/60">Discussioni con compagni e docenti su argomenti scolastici</p>
+              <p className="text-sm text-foreground/60">Discussioni tra compagni di classe su argomenti scolastici</p>
             </Card>
             <Card className="p-6 text-center">
               <Award className="w-8 h-8 text-primary mx-auto mb-3" />

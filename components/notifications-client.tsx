@@ -65,7 +65,8 @@ export function NotificationsClient() {
 
     if (user) {
       await markAllNotificationsAsRead(user.id)
-      setNotifications(notifications.map((n) => ({ ...n, is_read: true })))
+      // Reload notifications from database to ensure persistence
+      await loadNotifications()
       toast({
         title: "Tutte le notifiche sono state lette",
       })
@@ -84,6 +85,8 @@ export function NotificationsClient() {
       quiz_completed: "📝",
       material_uploaded: "📄",
       discussion_created: "💭",
+      assignment_reminder: "📅",
+      exam_reminder: "📝",
     }
     return icons[type] || "🔔"
   }

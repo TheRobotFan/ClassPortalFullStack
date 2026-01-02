@@ -6,32 +6,51 @@ export async function getDashboardStats() {
   const supabase = await createClient()
 
   // Get real counts from database
+  const today = new Date().toISOString().split("T")[0]
+
   const [
     { count: usersCount },
     { count: materialsCount },
     { count: exercisesCount },
     { count: quizzesCount },
     { count: forumCount },
+    { count: studentsCount },
+    { count: teachersCount },
+    { count: hackersCount },
+    { count: adminsCount },
+    { count: activeTodayCount },
   ] = await Promise.all([
     supabase.from("users").select("*", { count: "exact", head: true }),
     supabase.from("materials").select("*", { count: "exact", head: true }),
     supabase.from("exercises").select("*", { count: "exact", head: true }),
     supabase.from("quizzes").select("*", { count: "exact", head: true }),
     supabase.from("forum_discussions").select("*", { count: "exact", head: true }),
+    supabase.from("users").select("*", { count: "exact", head: true }).eq("role", "student"),
+    supabase.from("users").select("*", { count: "exact", head: true }).eq("role", "teacher"),
+    supabase.from("users").select("*", { count: "exact", head: true }).eq("role", "hacker"),
+    supabase.from("users").select("*", { count: "exact", head: true }).eq("role", "admin"),
+    supabase.from("users").select("*", { count: "exact", head: true }).eq("last_activity_date", today),
   ])
 
+  const totalUsers = usersCount || 0
+
   return {
-    usersCount: usersCount || 0,
+    usersCount: totalUsers,
     materialsCount: materialsCount || 0,
     exercisesCount: exercisesCount || 0,
     quizzesCount: quizzesCount || 0,
     forumCount: forumCount || 0,
-    totalUsers: usersCount || 0,
+    totalUsers,
     totalMaterials: materialsCount || 0,
     totalExercises: exercisesCount || 0,
     totalDiscussions: forumCount || 0,
     totalViews: 0,
     totalContent: (materialsCount || 0) + (exercisesCount || 0) + (quizzesCount || 0),
+    studentsCount: studentsCount || 0,
+    teachersCount: teachersCount || 0,
+    hackersCount: hackersCount || 0,
+    adminsCount: adminsCount || 0,
+    activeTodayCount: activeTodayCount || 0,
   }
 }
 
@@ -61,19 +80,42 @@ export async function getContentUploadTrend() {
 
 export async function getActivityTrend() {
   const supabase = await createClient()
-  const { data, error } = await supabase.rpc("get_activity_trend")
 
-  if (error) {
-    console.error("Error fetching activity trend:", error)
+  try {
+    // First check if the RPC exists
+    const { data: rpcExists } = await supabase.rpc('get_activity_trend')
+
+    if (!rpcExists) {
+      // Fallback to direct query if RPC doesn't exist
+      const { data, error } = await supabase
+        .from('forum_discussions')
+        .select('created_at, user_id')
+        .order('created_at', { ascending: false })
+        .limit(100)
+
+      if (error) throw error
+
+      return data?.map(item => ({
+        date: new Date(item.created_at).toISOString().split('T')[0],
+        count: 1
+      })) || []
+    }
+
+    // Use RPC if available
+    const { data, error } = await supabase.rpc("get_activity_trend")
+
+    if (error) throw error
+
+    return data || []
+  } catch (error) {
+    console.error("Error in getActivityTrend:", error instanceof Error ? error.message : error)
     return []
   }
-
-  return data || []
 }
 
 export async function getMostViewedContent() {
   const supabase = await createClient()
-  
+
   try {
     // Get materials with views
     const { data: materials, error: materialsError } = await supabase
@@ -154,45 +196,65 @@ export async function getMostViewedContent() {
 
 export async function getMostActiveUsers() {
   const supabase = await createClient()
-  
+
   try {
-    // Get users with their contribution counts
-    const { data: users, error } = await supabase
+    // First get users with XP points
+    const { data: users, error: usersError } = await supabase
       .from("users")
       .select(`
         id,
         full_name,
         xp_points,
-        level,
-        materials_count:materials(count),
-        exercises_count:exercises(count),
-        discussions_count:forum_discussions(count)
+        level
       `)
       .order("xp_points", { ascending: false })
       .limit(10)
 
-    if (error) {
-      console.error("Error fetching most active users:", error)
-      return []
-    }
+    if (usersError) throw usersError
 
-    // Calculate total contributions
-    return (users || []).map((user: any) => ({
-      id: user.id,
-      full_name: user.full_name,
-      contributions: (user.materials_count?.[0]?.count || 0) + (user.exercises_count?.[0]?.count || 0) + (user.discussions_count?.[0]?.count || 0),
-      xp_points: user.xp_points || 0
-    }))
+    if (!users?.length) return []
 
+    // Then get counts for each user separately
+    const usersWithCounts = await Promise.all(
+      users.map(async (user) => {
+        const [
+          { count: materialsCount },
+          { count: exercisesCount },
+          { count: discussionsCount }
+        ] = await Promise.all([
+          supabase
+            .from("materials")
+            .select("*", { count: "exact", head: true })
+            .eq("uploaded_by", user.id),
+          supabase
+            .from("exercises")
+            .select("*", { count: "exact", head: true })
+            .eq("created_by", user.id),
+          supabase
+            .from("forum_discussions")
+            .select("*", { count: "exact", head: true })
+            .eq("user_id", user.id)
+        ])
+
+        return {
+          id: user.id,
+          full_name: user.full_name,
+          contributions: (materialsCount || 0) + (exercisesCount || 0) + (discussionsCount || 0),
+          xp_points: user.xp_points || 0
+        }
+      })
+    )
+
+    return usersWithCounts
   } catch (error) {
-    console.error("Error in getMostActiveUsers:", error)
+    console.error("Error in getMostActiveUsers:", error instanceof Error ? error.message : error)
     return []
   }
 }
 
 export async function getSubjectDistribution() {
   const supabase = await createClient()
-  
+
   try {
     // Get all subjects
     const { data: subjects, error: subjectsError } = await supabase

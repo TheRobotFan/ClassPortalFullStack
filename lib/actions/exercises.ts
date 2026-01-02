@@ -101,6 +101,17 @@ export async function updateExercise(
 export async function deleteExercise(id: string) {
   const supabase = await createClient()
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error("Non autenticato")
+
+  const { data: userData } = await supabase.from("users").select("role").eq("id", user.id).single()
+
+  if (userData?.role !== "admin" && userData?.role !== "hacker") {
+    throw new Error("Solo amministratori e hacker possono eliminare esercizi")
+  }
+
   const { error } = await supabase.from("exercises").delete().eq("id", id)
 
   if (error) throw error

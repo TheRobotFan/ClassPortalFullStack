@@ -1,48 +1,63 @@
 "use client"
 
-import { useState, useCallback, memo } from "react"
+import { useState, useCallback, useEffect, memo } from "react"
 import Link from "next/link"
 import { Search, Bell, User, Menu, X, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { ThemeToggle } from "@/components/theme-toggle"
 
-const searchableContent = [
-  { title: "Quiz di Matematica - Equazioni", href: "/quiz", category: "Quiz" },
-  { title: "Quiz Matematica Settimanale", href: "/quiz", category: "Quiz" },
-  { title: "Quiz Fisica - Cinematica", href: "/quiz", category: "Quiz" },
-  { title: "Quiz Biologia - Cellula", href: "/quiz", category: "Quiz" },
-  { title: "Quiz di Matematica - Frazioni", href: "/quiz", category: "Quiz" },
-  { title: "Quiz Fisica - Termodinamica", href: "/quiz", category: "Quiz" },
-  { title: "Quiz Biologia - Evoluzione", href: "/quiz", category: "Quiz" },
-  { title: "Esercizio Equazioni di Primo Grado", href: "/esercizi", category: "Esercizio" },
-  { title: "Fotosintesi e Respirazione", href: "/appunti", category: "Appunto" },
-  { title: "Progetto Robotica - Mars Rover", href: "/progetti", category: "Progetto" },
-  { title: "Come preparare la relazione?", href: "/forum", category: "Discussione" },
-  { title: "Analisi Dante", href: "/progetti", category: "Progetto" },
-  { title: "Energia Rinnovabile", href: "/progetti", category: "Progetto" },
-]
+type SearchResult = {
+  title: string
+  href: string
+  category: string
+}
 
 export const Navbar = memo(function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
-  const [searchResults, setSearchResults] = useState<typeof searchableContent>([])
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([])
   const [showSearchResults, setShowSearchResults] = useState(false)
+  const [searchLoading, setSearchLoading] = useState(false)
 
-  const handleSearch = useCallback((query: string) => {
-    setSearchQuery(query)
-    if (query.trim().length > 0) {
-      const results = searchableContent.filter(
-        (item) =>
-          item.title.toLowerCase().includes(query.toLowerCase()) ||
-          item.category.toLowerCase().includes(query.toLowerCase()),
-      )
-      setSearchResults(results)
-      setShowSearchResults(true)
-    } else {
+  const performSearch = useCallback(async (query: string) => {
+    const q = query.trim()
+    if (!q) {
+      setSearchResults([])
       setShowSearchResults(false)
+      return
+    }
+
+    try {
+      setSearchLoading(true)
+      const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`)
+      if (!res.ok) {
+        throw new Error("Errore nella ricerca")
+      }
+      const data = (await res.json()) as SearchResult[]
+      setSearchResults(data)
+      setShowSearchResults(data.length > 0)
+    } catch {
+      setSearchResults([])
+      setShowSearchResults(false)
+    } finally {
+      setSearchLoading(false)
     }
   }, [])
+
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([])
+      setShowSearchResults(false)
+      return
+    }
+
+    const handle = setTimeout(() => {
+      void performSearch(searchQuery)
+    }, 250)
+
+    return () => clearTimeout(handle)
+  }, [searchQuery, performSearch])
 
   return (
     <nav className="sticky top-0 z-50 bg-card border-b border-border shadow-sm">
@@ -67,11 +82,11 @@ export const Navbar = memo(function Navbar() {
             <Link href="/appunti" className="text-foreground/70 hover:text-foreground transition">
               Appunti
             </Link>
-            <Link href="/forum" className="text-foreground/70 hover:text-foreground transition">
-              Forum
-            </Link>
             <Link href="/progetti" className="text-foreground/70 hover:text-foreground transition">
               Progetti
+            </Link>
+            <Link href="/guida" className="text-foreground/70 hover:text-foreground transition">
+              Guida
             </Link>
             <Link href="/ai" className="text-foreground/70 hover:text-foreground transition flex items-center gap-1">
               <Sparkles className="w-4 h-4" />
@@ -88,26 +103,33 @@ export const Navbar = memo(function Navbar() {
                 placeholder="Cerca..."
                 className="bg-transparent outline-none text-sm w-32 placeholder-muted-foreground"
                 value={searchQuery}
-                onChange={(e) => handleSearch(e.target.value)}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 onFocus={() => searchQuery && setShowSearchResults(true)}
               />
-              {showSearchResults && searchResults.length > 0 && (
+              {(showSearchResults || searchLoading) && (
                 <Card className="absolute top-full left-0 mt-2 w-80 p-2 z-50 bg-card border border-border shadow-lg">
                   <div className="space-y-1 max-h-64 overflow-y-auto">
-                    {searchResults.map((result, idx) => (
-                      <Link
-                        key={idx}
-                        href={result.href}
-                        onClick={() => {
-                          setSearchQuery("")
-                          setShowSearchResults(false)
-                        }}
-                        className="block p-2 rounded hover:bg-muted transition text-sm"
-                      >
-                        <div className="font-medium text-foreground">{result.title}</div>
-                        <div className="text-xs text-foreground/60">{result.category}</div>
-                      </Link>
-                    ))}
+                    {searchLoading && (
+                      <div className="p-2 text-xs text-foreground/60">Ricerca in corso...</div>
+                    )}
+                    {!searchLoading && searchResults.length === 0 && (
+                      <div className="p-2 text-xs text-foreground/60">Nessun risultato</div>
+                    )}
+                    {!searchLoading &&
+                      searchResults.map((result, idx) => (
+                        <Link
+                          key={idx}
+                          href={result.href}
+                          onClick={() => {
+                            setSearchQuery("")
+                            setShowSearchResults(false)
+                          }}
+                          className="block p-2 rounded hover:bg-muted transition text-sm"
+                        >
+                          <div className="font-medium text-foreground">{result.title}</div>
+                          <div className="text-xs text-foreground/60">{result.category}</div>
+                        </Link>
+                      ))}
                   </div>
                 </Card>
               )}
@@ -147,11 +169,11 @@ export const Navbar = memo(function Navbar() {
             <Link href="/appunti" className="block py-2 text-foreground/70 hover:text-foreground">
               Appunti
             </Link>
-            <Link href="/forum" className="block py-2 text-foreground/70 hover:text-foreground">
-              Forum
-            </Link>
             <Link href="/progetti" className="block py-2 text-foreground/70 hover:text-foreground">
               Progetti
+            </Link>
+            <Link href="/guida" className="block py-2 text-foreground/70 hover:text-foreground">
+              Guida
             </Link>
             <Link href="/ai" className="block py-2 text-foreground/70 hover:text-foreground flex items-center gap-2">
               <Sparkles className="w-4 h-4" />

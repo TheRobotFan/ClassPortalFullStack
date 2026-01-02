@@ -11,8 +11,8 @@ export async function getQuizzes(subjectId?: string) {
     .from("quizzes")
     .select(`
       *,
-      created_by_user:users!quizzes_created_by_fkey(id, full_name, avatar_url),
-      subject:subjects(id, name, color)
+      subject:subjects(id, name, color),
+      created_by_user:users!quizzes_created_by_fkey(id, full_name, avatar_url)
     `)
     .order("created_at", { ascending: false })
 
@@ -26,21 +26,38 @@ export async function getQuizzes(subjectId?: string) {
   return data
 }
 
-export async function getQuizById(id: string) {
+export async function getQuizById(quizId: string) {
   const supabase = await createClient()
 
   const { data, error } = await supabase
     .from("quizzes")
     .select(`
       *,
-      created_by_user:users!quizzes_created_by_fkey(id, full_name, avatar_url),
       subject:subjects(id, name, color),
-      questions:quiz_questions(*)
+      questions:quiz_questions(*),
+      created_by_user:users!quizzes_created_by_fkey(id, full_name, avatar_url)
     `)
-    .eq("id", id)
+    .eq("id", quizId)
     .single()
 
   if (error) throw error
+
+  // Convert database format to frontend format
+  if (data.questions) {
+    data.questions = data.questions.map((q: any) => ({
+      id: q.id,
+      question: q.question,
+      // Convert separate columns back to options array
+      options: [q.option_a, q.option_b, q.option_c, q.option_d].filter(opt => opt && opt.trim()),
+      // Convert letter back to full text (A -> option_a text, etc.)
+      correct_answer: q.correct_answer === 'A' ? q.option_a :
+                     q.correct_answer === 'B' ? q.option_b :
+                     q.correct_answer === 'C' ? q.option_c :
+                     q.correct_answer === 'D' ? q.option_d : '',
+      explanation: q.explanation
+    }))
+  }
+
   return data
 }
 
@@ -59,11 +76,10 @@ export async function createQuiz(formData: {
   } = await supabase.auth.getUser()
   if (!user) throw new Error("Non autenticato")
 
-  // Check if user is admin
   const { data: userData } = await supabase.from("users").select("role").eq("id", user.id).single()
 
-  if (userData?.role !== "admin") {
-    throw new Error("Solo gli admin possono creare quiz")
+  if (userData?.role !== "hacker" && userData?.role !== "teacher") {
+    throw new Error("Solo gli hacker della classe o i teacher possono creare quiz")
   }
 
   const { data, error } = await supabase
@@ -77,8 +93,6 @@ export async function createQuiz(formData: {
     .single()
 
   if (error) throw error
-
-  await awardXP(user.id, 50, "Creazione quiz")
 
   revalidatePath("/quiz")
   return data
@@ -100,21 +114,44 @@ export async function addQuizQuestion(
   } = await supabase.auth.getUser()
   if (!user) throw new Error("Non autenticato")
 
-  // Check if user is admin or teacher
   const { data: userData } = await supabase.from("users").select("role").eq("id", user.id).single()
 
-  if (userData?.role !== "admin" && userData?.role !== "teacher") {
-    throw new Error("Solo gli admin e i teacher possono aggiungere domande")
+  if (userData?.role !== "hacker" && userData?.role !== "teacher") {
+    throw new Error("Solo gli hacker della classe o i teacher possono aggiungere domande")
   }
 
   console.log("Adding quiz question:", { quizId, question, userRole: userData?.role })
 
+  // Map the options array to separate columns and find the correct answer letter
+  const options = question.options.filter(opt => opt.trim()) // Remove empty options
+  if (options.length < 2) {
+    throw new Error("Ogni domanda deve avere almeno 2 opzioni")
+  }
+
+  // Find which option index matches the correct answer
+  const correctIndex = options.findIndex(opt => opt === question.correct_answer)
+  if (correctIndex === -1) {
+    throw new Error("La risposta corretta deve corrispondere a una delle opzioni")
+  }
+
+  // Convert index to letter (A, B, C, D)
+  const correctLetter = String.fromCharCode(65 + correctIndex) // 65 = 'A'
+
+  // Prepare the data for database insertion
+  const questionData = {
+    quiz_id: quizId,
+    question: question.question,
+    option_a: options[0] || '',
+    option_b: options[1] || '',
+    option_c: options[2] || '',
+    option_d: options[3] || '',
+    correct_answer: correctLetter,
+    explanation: question.explanation || null,
+  }
+
   const { data, error } = await supabase
     .from("quiz_questions")
-    .insert({
-      quiz_id: quizId,
-      ...question,
-    })
+    .insert(questionData)
     .select()
     .single()
 
@@ -125,10 +162,12 @@ export async function addQuizQuestion(
 
   console.log("Quiz question inserted successfully:", data)
 
-  // Temporarily comment out the RPC call to isolate the issue
+  // Update quiz question count (non-critical: log but don't block on error)
   try {
-    // await supabase.rpc("increment_quiz_questions", { quiz_id: quizId })
-    console.log("RPC call temporarily skipped")
+    const { error: rpcError } = await supabase.rpc("increment_quiz_questions", { quiz_id: quizId })
+    if (rpcError) {
+      console.error("RPC error (non-critical):", rpcError)
+    }
   } catch (rpcError) {
     console.error("RPC error (non-critical):", rpcError)
     // Don't throw error for RPC failure
@@ -200,4 +239,55 @@ export async function submitQuizAttempt(quizId: string, answers: Record<string, 
     totalQuestions: quiz.questions.length,
     xpEarned: totalXP,
   }
+}
+
+export async function deleteQuiz(quizId: string) {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error("Non autenticato")
+
+  const { data: userData } = await supabase.from("users").select("role").eq("id", user.id).single()
+
+  if (userData?.role !== "admin" && userData?.role !== "hacker") {
+    throw new Error("Solo amministratori e hacker possono eliminare quiz")
+  }
+
+  // Delete quiz questions first (due to foreign key constraint)
+  const { error: questionsError } = await supabase
+    .from("quiz_questions")
+    .delete()
+    .eq("quiz_id", quizId)
+
+  if (questionsError) {
+    console.error("Error deleting quiz questions:", questionsError)
+    throw new Error("Errore nell'eliminazione delle domande del quiz")
+  }
+
+  // Delete quiz attempts
+  const { error: attemptsError } = await supabase
+    .from("quiz_attempts")
+    .delete()
+    .eq("quiz_id", quizId)
+
+  if (attemptsError) {
+    console.error("Error deleting quiz attempts:", attemptsError)
+    // Non critico, continua
+  }
+
+  // Delete the quiz
+  const { error: quizError } = await supabase
+    .from("quizzes")
+    .delete()
+    .eq("id", quizId)
+
+  if (quizError) {
+    console.error("Error deleting quiz:", quizError)
+    throw new Error("Errore nell'eliminazione del quiz")
+  }
+
+  revalidatePath("/quiz")
+  return { success: true }
 }

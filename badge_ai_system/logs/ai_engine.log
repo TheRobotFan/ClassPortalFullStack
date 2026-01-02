@@ -1,0 +1,235 @@
+[2026-01-01 13:14:35] WARNING - ai.ai_engine - Quantum computing libraries not available - running in classical mode
+[2026-01-01 13:14:35] WARNING - ai.ai_engine - Federated learning libraries not available
+[2026-01-01 13:14:35] WARNING - ai.ai_engine - Causal inference libraries not available
+[2026-01-01 13:14:35] WARNING - ai.ai_engine - Meta-learning libraries not available
+[2026-01-01 13:14:35] WARNING - ai.ai_engine - Self-supervised learning libraries not available
+[2026-01-01 13:14:35] WARNING - ai.ai_engine - Multi-modal learning libraries not available
+[2026-01-01 13:14:35] WARNING - ai.ai_engine - Neural architecture search libraries not available
+[2026-01-01 13:14:35] WARNING - ai.ai_engine - Advanced Bayesian optimization libraries not available
+[2026-01-01 13:14:35] WARNING - ai.ai_engine - Real-time adaptation libraries not available
+[2026-01-01 13:14:35] WARNING - ai.ai_engine - Cognitive computing libraries not available
+[2026-01-01 13:14:35] INFO - ai.ai_engine - 🎓 ULTRA-ADVANCED CLAS2E AI v5.0 - COMPLETE ECOSYSTEM INTELLIGENCE ACTIVE! 🚀📚🤖
+[2026-01-01 13:15:59] WARNING - ai.ai_engine - Quantum computing libraries not available - running in classical mode
+[2026-01-01 13:15:59] WARNING - ai.ai_engine - Federated learning libraries not available
+[2026-01-01 13:15:59] WARNING - ai.ai_engine - Causal inference libraries not available
+[2026-01-01 13:15:59] WARNING - ai.ai_engine - Meta-learning libraries not available
+[2026-01-01 13:15:59] WARNING - ai.ai_engine - Self-supervised learning libraries not available
+[2026-01-01 13:15:59] WARNING - ai.ai_engine - Multi-modal learning libraries not available
+[2026-01-01 13:15:59] WARNING - ai.ai_engine - Neural architecture search libraries not available
+[2026-01-01 13:15:59] WARNING - ai.ai_engine - Advanced Bayesian optimization libraries not available
+[2026-01-01 13:15:59] WARNING - ai.ai_engine - Real-time adaptation libraries not available
+[2026-01-01 13:15:59] WARNING - ai.ai_engine - Cognitive computing libraries not available
+[2026-01-01 13:15:59] INFO - ai.ai_engine - 🎓 ULTRA-ADVANCED CLAS2E AI v5.0 - COMPLETE ECOSYSTEM INTELLIGENCE ACTIVE! 🚀📚🤖
+[2026-01-01 13:17:54] WARNING - ai.ai_engine - Quantum computing libraries not available - running in classical mode
+[2026-01-01 13:17:54] WARNING - ai.ai_engine - Federated learning libraries not available
+[2026-01-01 13:17:54] WARNING - ai.ai_engine - Causal inference libraries not available
+[2026-01-01 13:17:54] WARNING - ai.ai_engine - Meta-learning libraries not available
+[2026-01-01 13:17:54] WARNING - ai.ai_engine - Self-supervised learning libraries not available
+[2026-01-01 13:17:54] WARNING - ai.ai_engine - Multi-modal learning libraries not available
+[2026-01-01 13:17:54] WARNING - ai.ai_engine - Neural architecture search libraries not available
+[2026-01-01 13:17:54] WARNING - ai.ai_engine - Advanced Bayesian optimization libraries not available
+[2026-01-01 13:17:54] WARNING - ai.ai_engine - Real-time adaptation libraries not available
+[2026-01-01 13:17:54] WARNING - ai.ai_engine - Cognitive computing libraries not available
+[2026-01-01 13:17:54] INFO - ai.ai_engine - ULTRA-ADVANCED CLAS2E AI v5.0 - COMPLETE ECOSYSTEM INTELLIGENCE ACTIVE!
+[2026-01-01 13:17:54] INFO - __main__ - Starting Clas2e AI Ecosystem v6.0
+[2026-01-01 13:17:54] INFO - __main__ - Frontend: http://localhost:3000
+[2026-01-01 13:17:54] INFO - __main__ - API Docs: http://localhost:8000/docs
+[2026-01-01 13:17:54] INFO - __main__ - Test Suite: python test_ai_system.py
+[2026-01-01 13:17:54] INFO - __main__ - ============================================================
+[2026-01-01 13:17:54] WARNING - ai.ai_engine - Quantum computing libraries not available - running in classical mode
+[2026-01-01 13:17:54] WARNING - ai.ai_engine - Federated learning libraries not available
+[2026-01-01 13:17:54] WARNING - ai.ai_engine - Causal inference libraries not available
+[2026-01-01 13:17:54] WARNING - ai.ai_engine - Meta-learning libraries not available
+[2026-01-01 13:17:54] WARNING - ai.ai_engine - Self-supervised learning libraries not available
+[2026-01-01 13:17:54] WARNING - ai.ai_engine - Multi-modal learning libraries not available
+[2026-01-01 13:17:54] WARNING - ai.ai_engine - Neural architecture search libraries not available
+[2026-01-01 13:17:54] WARNING - ai.ai_engine - Advanced Bayesian optimization libraries not available
+[2026-01-01 13:17:54] WARNING - ai.ai_engine - Real-time adaptation libraries not available
+[2026-01-01 13:17:54] WARNING - ai.ai_engine - Cognitive computing libraries not available
+[2026-01-01 13:17:54] INFO - ai.ai_engine - ULTRA-ADVANCED CLAS2E AI v5.0 - COMPLETE ECOSYSTEM INTELLIGENCE ACTIVE!
+[2026-01-01 13:17:54] INFO - uvicorn.error - Started server process [35352]
+[2026-01-01 13:17:54] INFO - uvicorn.error - Waiting for application startup.
+[2026-01-01 13:17:54] INFO - app.main - Starting Clas2e AI Ecosystem v6.0...
+[2026-01-01 13:17:54] INFO - ai.ai_engine - Starting UltraAdvancedAIEngine v3.0 initialization...
+[2026-01-01 13:17:54] INFO - ai.ai_engine - Initializing deep learning models...
+[2026-01-01 13:17:55] INFO - ai.ai_engine - Deep learning models initialized
+[2026-01-01 13:17:55] INFO - ai.ai_engine - Initializing reinforcement learning systems...
+[2026-01-01 13:17:55] INFO - ai.ai_engine - Training RL agents for badge optimization...
+[2026-01-01 13:17:55] INFO - ai.ai_engine - Training PPO agent...
+[2026-01-01 13:18:02] ERROR - ai.ai_engine - ❌ Error during training: I/O operation on closed file.
+[2026-01-01 13:18:02] ERROR - ai.ai_engine - Failed to initialize UltraAdvancedAIEngine v3.0: I/O operation on closed file.
+[2026-01-01 13:18:02] WARNING - app.main - AI Engine initialization failed: I/O operation on closed file.
+[2026-01-01 13:18:02] INFO - uvicorn.error - Application startup complete.
+[2026-01-01 13:18:02] INFO - uvicorn.error - Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+[2026-01-01 13:18:07] INFO - uvicorn.error - Shutting down
+[2026-01-01 13:18:07] INFO - uvicorn.error - Waiting for application shutdown.
+[2026-01-01 13:18:07] INFO - app.main - Shutting down Clas2e AI Ecosystem...
+[2026-01-01 13:18:07] INFO - uvicorn.error - Application shutdown complete.
+[2026-01-01 13:18:07] INFO - uvicorn.error - Finished server process [35352]
+[2026-01-01 13:19:10] WARNING - ai.ai_engine - Quantum computing libraries not available - running in classical mode
+[2026-01-01 13:19:10] WARNING - ai.ai_engine - Federated learning libraries not available
+[2026-01-01 13:19:10] WARNING - ai.ai_engine - Causal inference libraries not available
+[2026-01-01 13:19:10] WARNING - ai.ai_engine - Meta-learning libraries not available
+[2026-01-01 13:19:10] WARNING - ai.ai_engine - Self-supervised learning libraries not available
+[2026-01-01 13:19:10] WARNING - ai.ai_engine - Multi-modal learning libraries not available
+[2026-01-01 13:19:10] WARNING - ai.ai_engine - Neural architecture search libraries not available
+[2026-01-01 13:19:10] WARNING - ai.ai_engine - Advanced Bayesian optimization libraries not available
+[2026-01-01 13:19:10] WARNING - ai.ai_engine - Real-time adaptation libraries not available
+[2026-01-01 13:19:10] WARNING - ai.ai_engine - Cognitive computing libraries not available
+[2026-01-01 13:19:10] INFO - ai.ai_engine - ULTRA-ADVANCED CLAS2E AI v5.0 - COMPLETE ECOSYSTEM INTELLIGENCE ACTIVE!
+[2026-01-01 13:19:10] INFO - __main__ - Starting Clas2e AI Ecosystem v6.0
+[2026-01-01 13:19:10] INFO - __main__ - Frontend: http://localhost:3000
+[2026-01-01 13:19:10] INFO - __main__ - API Docs: http://localhost:8000/docs
+[2026-01-01 13:19:10] INFO - __main__ - Test Suite: python test_ai_system.py
+[2026-01-01 13:19:10] INFO - __main__ - ============================================================
+[2026-01-01 13:19:10] WARNING - ai.ai_engine - Quantum computing libraries not available - running in classical mode
+[2026-01-01 13:19:10] WARNING - ai.ai_engine - Federated learning libraries not available
+[2026-01-01 13:19:10] WARNING - ai.ai_engine - Causal inference libraries not available
+[2026-01-01 13:19:10] WARNING - ai.ai_engine - Meta-learning libraries not available
+[2026-01-01 13:19:10] WARNING - ai.ai_engine - Self-supervised learning libraries not available
+[2026-01-01 13:19:10] WARNING - ai.ai_engine - Multi-modal learning libraries not available
+[2026-01-01 13:19:10] WARNING - ai.ai_engine - Neural architecture search libraries not available
+[2026-01-01 13:19:10] WARNING - ai.ai_engine - Advanced Bayesian optimization libraries not available
+[2026-01-01 13:19:10] WARNING - ai.ai_engine - Real-time adaptation libraries not available
+[2026-01-01 13:19:10] WARNING - ai.ai_engine - Cognitive computing libraries not available
+[2026-01-01 13:19:10] INFO - ai.ai_engine - ULTRA-ADVANCED CLAS2E AI v5.0 - COMPLETE ECOSYSTEM INTELLIGENCE ACTIVE!
+[2026-01-01 13:19:10] INFO - uvicorn.error - Started server process [36564]
+[2026-01-01 13:19:10] INFO - uvicorn.error - Waiting for application startup.
+[2026-01-01 13:19:10] INFO - app.main - Starting Clas2e AI Ecosystem v6.0...
+[2026-01-01 13:19:10] INFO - ai.ai_engine - Starting UltraAdvancedAIEngine v3.0 initialization...
+[2026-01-01 13:19:10] INFO - ai.ai_engine - Initializing deep learning models...
+[2026-01-01 13:19:10] INFO - ai.ai_engine - Deep learning models initialized
+[2026-01-01 13:19:10] INFO - ai.ai_engine - Initializing reinforcement learning systems...
+[2026-01-01 13:19:10] INFO - ai.ai_engine - Training RL agents for badge optimization...
+[2026-01-01 13:19:10] INFO - ai.ai_engine - Training PPO agent...
+[2026-01-01 13:19:18] ERROR - ai.ai_engine - Error during training: I/O operation on closed file.
+[2026-01-01 13:19:18] ERROR - ai.ai_engine - Failed to initialize UltraAdvancedAIEngine v3.0: I/O operation on closed file.
+[2026-01-01 13:19:18] WARNING - app.main - AI Engine initialization failed: I/O operation on closed file.
+[2026-01-01 13:19:18] INFO - uvicorn.error - Application startup complete.
+[2026-01-01 13:19:18] INFO - uvicorn.error - Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+[2026-01-01 13:19:21] INFO - uvicorn.error - Shutting down
+[2026-01-01 13:19:21] INFO - uvicorn.error - Waiting for application shutdown.
+[2026-01-01 13:19:21] INFO - app.main - Shutting down Clas2e AI Ecosystem...
+[2026-01-01 13:19:21] INFO - uvicorn.error - Application shutdown complete.
+[2026-01-01 13:19:21] INFO - uvicorn.error - Finished server process [36564]
+[2026-01-01 13:20:54] WARNING - ai.ai_engine - Quantum computing libraries not available - running in classical mode
+[2026-01-01 13:20:54] WARNING - ai.ai_engine - Federated learning libraries not available
+[2026-01-01 13:20:54] WARNING - ai.ai_engine - Causal inference libraries not available
+[2026-01-01 13:20:54] WARNING - ai.ai_engine - Meta-learning libraries not available
+[2026-01-01 13:20:54] WARNING - ai.ai_engine - Self-supervised learning libraries not available
+[2026-01-01 13:20:54] WARNING - ai.ai_engine - Multi-modal learning libraries not available
+[2026-01-01 13:20:54] WARNING - ai.ai_engine - Neural architecture search libraries not available
+[2026-01-01 13:20:54] WARNING - ai.ai_engine - Advanced Bayesian optimization libraries not available
+[2026-01-01 13:20:54] WARNING - ai.ai_engine - Real-time adaptation libraries not available
+[2026-01-01 13:20:54] WARNING - ai.ai_engine - Cognitive computing libraries not available
+[2026-01-01 13:20:54] INFO - ai.ai_engine - ULTRA-ADVANCED CLAS2E AI v5.0 - COMPLETE ECOSYSTEM INTELLIGENCE ACTIVE!
+[2026-01-01 13:20:54] INFO - __main__ - Starting Clas2e AI Ecosystem v6.0
+[2026-01-01 13:20:54] INFO - __main__ - Frontend: http://localhost:3000
+[2026-01-01 13:20:54] INFO - __main__ - API Docs: http://localhost:8000/docs
+[2026-01-01 13:20:54] INFO - __main__ - Test Suite: python test_ai_system.py
+[2026-01-01 13:20:54] INFO - __main__ - ============================================================
+[2026-01-01 13:20:54] WARNING - ai.ai_engine - Quantum computing libraries not available - running in classical mode
+[2026-01-01 13:20:54] WARNING - ai.ai_engine - Federated learning libraries not available
+[2026-01-01 13:20:54] WARNING - ai.ai_engine - Causal inference libraries not available
+[2026-01-01 13:20:54] WARNING - ai.ai_engine - Meta-learning libraries not available
+[2026-01-01 13:20:54] WARNING - ai.ai_engine - Self-supervised learning libraries not available
+[2026-01-01 13:20:54] WARNING - ai.ai_engine - Multi-modal learning libraries not available
+[2026-01-01 13:20:54] WARNING - ai.ai_engine - Neural architecture search libraries not available
+[2026-01-01 13:20:54] WARNING - ai.ai_engine - Advanced Bayesian optimization libraries not available
+[2026-01-01 13:20:54] WARNING - ai.ai_engine - Real-time adaptation libraries not available
+[2026-01-01 13:20:54] WARNING - ai.ai_engine - Cognitive computing libraries not available
+[2026-01-01 13:20:54] INFO - ai.ai_engine - ULTRA-ADVANCED CLAS2E AI v5.0 - COMPLETE ECOSYSTEM INTELLIGENCE ACTIVE!
+[2026-01-01 13:20:54] INFO - uvicorn.error - Started server process [36844]
+[2026-01-01 13:20:54] INFO - uvicorn.error - Waiting for application startup.
+[2026-01-01 13:20:54] INFO - app.main - Starting Clas2e AI Ecosystem v6.0...
+[2026-01-01 13:20:54] INFO - ai.ai_engine - Starting UltraAdvancedAIEngine v3.0 initialization...
+[2026-01-01 13:20:54] INFO - ai.ai_engine - Initializing deep learning models...
+[2026-01-01 13:20:54] INFO - ai.ai_engine - Deep learning models initialized
+[2026-01-01 13:20:54] INFO - ai.ai_engine - Initializing reinforcement learning systems...
+[2026-01-01 13:20:54] INFO - ai.ai_engine - RL agents created - training will be performed on-demand
+[2026-01-01 13:20:54] INFO - ai.ai_engine - Initializing NEXT-GENERATION AI engines...
+[2026-01-01 13:20:54] INFO - ai.ai_engine - Initializing Quantum Computing Engine...
+[2026-01-01 13:20:54] INFO - ai.ai_engine - Initializing Federated Learning Engine...
+[2026-01-01 13:20:54] INFO - ai.ai_engine - Initializing Causal Inference Engine...
+[2026-01-01 13:20:54] INFO - ai.ai_engine - Initializing Meta-Learning Engine...
+[2026-01-01 13:20:54] INFO - ai.ai_engine - Initializing Self-Supervised Learning Engine...
+[2026-01-01 13:20:54] INFO - ai.ai_engine - Initializing Multi-Modal Learning Engine...
+[2026-01-01 13:20:54] INFO - ai.ai_engine - Initializing Neural Architecture Search Engine...
+[2026-01-01 13:20:54] INFO - ai.ai_engine - Initializing Advanced Bayesian Optimization Engine...
+[2026-01-01 13:20:54] INFO - ai.ai_engine - Initializing Real-Time Adaptation Engine...
+[2026-01-01 13:20:54] INFO - ai.ai_engine - Initializing Cognitive Computing Engine...
+[2026-01-01 13:20:54] INFO - ai.ai_engine - All NEXT-GENERATION AI engines initialized successfully!
+[2026-01-01 13:20:54] INFO - ai.ai_engine - Performing system integrity check...
+[2026-01-01 13:20:54] WARNING - ai.ai_engine - ⚠️ System integrity check failed for: ['ensemble_model', 'rl_agent']
+[2026-01-01 13:20:54] INFO - ai.ai_engine - UltraAdvancedAIEngine v3.0 fully initialized - NEXT-GENERATION AI ACTIVE!
+[2026-01-01 13:20:54] INFO - app.main - AI Engine initialized successfully
+[2026-01-01 13:20:54] INFO - uvicorn.error - Application startup complete.
+[2026-01-01 13:20:54] INFO - uvicorn.error - Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+[2026-01-01 13:21:17] INFO - uvicorn.error - Shutting down
+[2026-01-01 13:21:17] INFO - uvicorn.error - Waiting for application shutdown.
+[2026-01-01 13:21:17] INFO - app.main - Shutting down Clas2e AI Ecosystem...
+[2026-01-01 13:21:17] INFO - uvicorn.error - Application shutdown complete.
+[2026-01-01 13:21:17] INFO - uvicorn.error - Finished server process [36844]
+[2026-01-01 13:22:04] WARNING - ai.ai_engine - Quantum computing libraries not available - running in classical mode
+[2026-01-01 13:22:04] WARNING - ai.ai_engine - Federated learning libraries not available
+[2026-01-01 13:22:04] WARNING - ai.ai_engine - Causal inference libraries not available
+[2026-01-01 13:22:04] WARNING - ai.ai_engine - Meta-learning libraries not available
+[2026-01-01 13:22:04] WARNING - ai.ai_engine - Self-supervised learning libraries not available
+[2026-01-01 13:22:04] WARNING - ai.ai_engine - Multi-modal learning libraries not available
+[2026-01-01 13:22:04] WARNING - ai.ai_engine - Neural architecture search libraries not available
+[2026-01-01 13:22:04] WARNING - ai.ai_engine - Advanced Bayesian optimization libraries not available
+[2026-01-01 13:22:04] WARNING - ai.ai_engine - Real-time adaptation libraries not available
+[2026-01-01 13:22:04] WARNING - ai.ai_engine - Cognitive computing libraries not available
+[2026-01-01 13:22:04] INFO - ai.ai_engine - ULTRA-ADVANCED CLAS2E AI v5.0 - COMPLETE ECOSYSTEM INTELLIGENCE ACTIVE!
+[2026-01-01 13:22:04] INFO - __main__ - Starting Clas2e AI Ecosystem v6.0
+[2026-01-01 13:22:04] INFO - __main__ - Frontend: http://localhost:3000
+[2026-01-01 13:22:04] INFO - __main__ - API Docs: http://localhost:8000/docs
+[2026-01-01 13:22:04] INFO - __main__ - Test Suite: python test_ai_system.py
+[2026-01-01 13:22:04] INFO - __main__ - ============================================================
+[2026-01-01 13:22:04] WARNING - ai.ai_engine - Quantum computing libraries not available - running in classical mode
+[2026-01-01 13:22:04] WARNING - ai.ai_engine - Federated learning libraries not available
+[2026-01-01 13:22:04] WARNING - ai.ai_engine - Causal inference libraries not available
+[2026-01-01 13:22:04] WARNING - ai.ai_engine - Meta-learning libraries not available
+[2026-01-01 13:22:04] WARNING - ai.ai_engine - Self-supervised learning libraries not available
+[2026-01-01 13:22:04] WARNING - ai.ai_engine - Multi-modal learning libraries not available
+[2026-01-01 13:22:04] WARNING - ai.ai_engine - Neural architecture search libraries not available
+[2026-01-01 13:22:04] WARNING - ai.ai_engine - Advanced Bayesian optimization libraries not available
+[2026-01-01 13:22:04] WARNING - ai.ai_engine - Real-time adaptation libraries not available
+[2026-01-01 13:22:04] WARNING - ai.ai_engine - Cognitive computing libraries not available
+[2026-01-01 13:22:04] INFO - ai.ai_engine - ULTRA-ADVANCED CLAS2E AI v5.0 - COMPLETE ECOSYSTEM INTELLIGENCE ACTIVE!
+[2026-01-01 13:22:04] INFO - uvicorn.error - Started server process [35988]
+[2026-01-01 13:22:04] INFO - uvicorn.error - Waiting for application startup.
+[2026-01-01 13:22:04] INFO - app.main - Starting Clas2e AI Ecosystem v6.0...
+[2026-01-01 13:22:04] INFO - ai.ai_engine - Starting UltraAdvancedAIEngine v3.0 initialization...
+[2026-01-01 13:22:04] INFO - ai.ai_engine - Initializing deep learning models...
+[2026-01-01 13:22:04] INFO - ai.ai_engine - Deep learning models initialized
+[2026-01-01 13:22:04] INFO - ai.ai_engine - Initializing reinforcement learning systems...
+[2026-01-01 13:22:04] INFO - ai.ai_engine - RL agents created - training will be performed on-demand
+[2026-01-01 13:22:04] INFO - ai.ai_engine - Initializing NEXT-GENERATION AI engines...
+[2026-01-01 13:22:04] INFO - ai.ai_engine - Initializing Quantum Computing Engine...
+[2026-01-01 13:22:04] INFO - ai.ai_engine - Initializing Federated Learning Engine...
+[2026-01-01 13:22:04] INFO - ai.ai_engine - Initializing Causal Inference Engine...
+[2026-01-01 13:22:04] INFO - ai.ai_engine - Initializing Meta-Learning Engine...
+[2026-01-01 13:22:04] INFO - ai.ai_engine - Initializing Self-Supervised Learning Engine...
+[2026-01-01 13:22:04] INFO - ai.ai_engine - Initializing Multi-Modal Learning Engine...
+[2026-01-01 13:22:04] INFO - ai.ai_engine - Initializing Neural Architecture Search Engine...
+[2026-01-01 13:22:04] INFO - ai.ai_engine - Initializing Advanced Bayesian Optimization Engine...
+[2026-01-01 13:22:04] INFO - ai.ai_engine - Initializing Real-Time Adaptation Engine...
+[2026-01-01 13:22:04] INFO - ai.ai_engine - Initializing Cognitive Computing Engine...
+[2026-01-01 13:22:04] INFO - ai.ai_engine - All NEXT-GENERATION AI engines initialized successfully!
+[2026-01-01 13:22:04] INFO - ai.ai_engine - Performing system integrity check...
+[2026-01-01 13:22:04] WARNING - ai.ai_engine - System integrity check failed for: ['ensemble_model', 'rl_agent']
+[2026-01-01 13:22:04] INFO - ai.ai_engine - UltraAdvancedAIEngine v3.0 fully initialized - NEXT-GENERATION AI ACTIVE!
+[2026-01-01 13:22:04] INFO - app.main - AI Engine initialized successfully
+[2026-01-01 13:22:04] INFO - uvicorn.error - Application startup complete.
+[2026-01-01 13:22:04] INFO - uvicorn.error - Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+[2026-01-01 13:22:38] INFO - uvicorn.access - 127.0.0.1:37952 - "GET / HTTP/1.1" 404
+[2026-01-01 13:22:39] INFO - uvicorn.access - 127.0.0.1:37952 - "GET /favicon.ico HTTP/1.1" 404
+[2026-01-01 13:22:54] INFO - uvicorn.access - 127.0.0.1:25036 - "GET / HTTP/1.1" 404
+[2026-01-01 13:22:54] INFO - uvicorn.access - 127.0.0.1:25036 - "GET /favicon.ico HTTP/1.1" 404
+[2026-01-01 13:23:11] INFO - uvicorn.access - 127.0.0.1:30311 - "GET / HTTP/1.1" 404
+[2026-01-01 13:24:08] INFO - uvicorn.error - Shutting down
+[2026-01-01 13:24:08] INFO - uvicorn.error - Waiting for application shutdown.
+[2026-01-01 13:24:08] INFO - app.main - Shutting down Clas2e AI Ecosystem...
+[2026-01-01 13:24:08] INFO - uvicorn.error - Application shutdown complete.
+[2026-01-01 13:24:08] INFO - uvicorn.error - Finished server process [35988]

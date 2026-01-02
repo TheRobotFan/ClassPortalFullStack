@@ -29,8 +29,8 @@ export default async function DashboardPage() {
     redirect("/auth/login")
   }
 
-  // Check if user has admin or staff role
-  const hasAccess = user.role === "admin" || user.role === "teacher"
+  // Consenti accesso al dashboard ad admin, insegnanti e hacker
+  const hasAccess = user.role === "admin" || user.role === "teacher" || user.role === "hacker"
 
   if (!hasAccess) {
     return (
@@ -38,7 +38,9 @@ export default async function DashboardPage() {
         <div className="max-w-md w-full text-center">
           <div className="text-6xl mb-4">🔒</div>
           <h1 className="text-3xl font-bold mb-4">Accesso Negato</h1>
-          <p className="text-foreground/70 mb-6">Solo amministratori e insegnanti possono accedere al dashboard.</p>
+          <p className="text-foreground/70 mb-6">
+            Solo amministratori, insegnanti e hacker possono accedere al dashboard.
+          </p>
         </div>
       </div>
     )

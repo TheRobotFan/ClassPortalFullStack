@@ -1,80 +1,77 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { ArrowLeft, Loader2 } from "lucide-react"
-import Link from "next/link"
-import { getUserSettings, updateUserSettings, type UserSettings } from "@/lib/actions/settings"
-import { createClient } from "@/lib/supabase/client"
-import { useToast } from "@/hooks/use-toast"
+import { useState } from 'react';
+import { UserSettings, updateUserSettings } from '@/lib/actions/settings';
+import { toast } from 'sonner';
+import { Switch } from '@/components/ui/switch';
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Loader2 } from "lucide-react";
+import Link from "next/link";
 
-export function SettingsClient() {
-  const [settings, setSettings] = useState<UserSettings>({
-    notificationsEmail: true,
-    notificationsPush: false,
-    publicProfile: true,
-    newsletter: true,
-    privateMessages: true,
-    showActivity: true,
-  })
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const { toast } = useToast()
-  const supabase = createClient()
+type SettingsClientProps = {
+  userId: string;
+  initialSettings: UserSettings;
+};
 
-  useEffect(() => {
-    loadSettings()
-  }, [])
+export function SettingsClient({ userId, initialSettings }: SettingsClientProps) {
+  const [settings, setSettings] = useState<UserSettings>(initialSettings);
+  const [saving, setSaving] = useState(false);
 
-  async function loadSettings() {
-    setLoading(true)
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (user) {
-      const userSettings = await getUserSettings(user.id)
-      setSettings(userSettings)
+  const handleToggle = async (key: keyof UserSettings, checked: boolean) => {
+    const newSettings = { ...settings, [key]: checked };
+    setSettings(newSettings);
+    
+    if (key === 'notificationsPush') {
+      await handlePushNotificationsChange(checked);
     }
-    setLoading(false)
-  }
+    
+    try {
+      await updateUserSettings(userId, newSettings);
+      toast.success('Settings updated');
+    } catch (error) {
+      toast.error('Failed to update settings');
+    }
+  };
 
-  const handleToggle = (key: keyof UserSettings) => {
-    setSettings((prev) => ({ ...prev, [key]: !prev[key] }))
-  }
-
-  const handleSave = async () => {
-    setSaving(true)
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (user) {
-      try {
-        await updateUserSettings(user.id, settings)
-        toast({
-          title: "Impostazioni salvate",
-          description: "Le tue preferenze sono state aggiornate con successo",
-        })
-      } catch (error) {
-        toast({
-          title: "Errore",
-          description: "Impossibile salvare le impostazioni",
-          variant: "destructive",
-        })
+  const handlePushNotificationsChange = async (checked: boolean) => {
+    try {
+      if (checked) {
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+        });
+        
+        await fetch('/api/push/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            subscription,
+            userId
+          })
+        });
+      } else {
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.getSubscription();
+        
+        if (subscription) {
+          await fetch('/api/push/unsubscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              endpoint: subscription.endpoint,
+              userId
+            })
+          });
+          await subscription.unsubscribe();
+        }
       }
+    } catch (error) {
+      toast.error('Failed to update push notifications');
+      console.error(error);
     }
-    setSaving(false)
-  }
-
-  if (loading) {
-    return (
-      <div className="max-w-2xl mx-auto px-4 py-8 flex justify-center items-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    )
-  }
+  };
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
@@ -107,12 +104,20 @@ export function SettingsClient() {
               },
             ].map((notif) => (
               <label key={notif.key} className="flex items-start gap-4 p-3 rounded-lg hover:bg-muted cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={settings[notif.key]}
-                  onChange={() => handleToggle(notif.key)}
-                  className="w-4 h-4 mt-1 rounded"
-                />
+                {notif.key === "notificationsPush" ? (
+                  <Switch 
+                    checked={settings[notif.key]} 
+                    onCheckedChange={(checked) => handleToggle(notif.key, checked)}
+                    disabled={saving}
+                  />
+                ) : (
+                  <input
+                    type="checkbox"
+                    checked={settings[notif.key]}
+                    onChange={() => handleToggle(notif.key, !settings[notif.key])}
+                    className="w-4 h-4 mt-1 rounded"
+                  />
+                )}
                 <div>
                   <p className="font-medium">{notif.label}</p>
                   <p className="text-sm text-foreground/60">{notif.description}</p>
@@ -146,7 +151,7 @@ export function SettingsClient() {
                 <input
                   type="checkbox"
                   checked={settings[privacy.key]}
-                  onChange={() => handleToggle(privacy.key)}
+                  onChange={() => handleToggle(privacy.key, !settings[privacy.key])}
                   className="w-4 h-4 mt-1 rounded"
                 />
                 <div>
@@ -159,7 +164,14 @@ export function SettingsClient() {
         </div>
 
         <div className="flex gap-4">
-          <Button onClick={handleSave} disabled={saving} className="bg-primary hover:bg-primary/90">
+          <Button 
+            onClick={() => {
+              // Save all settings
+              handleToggle('notificationsPush', settings.notificationsPush);
+            }} 
+            disabled={saving} 
+            className="bg-primary hover:bg-primary/90"
+          >
             {saving ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />

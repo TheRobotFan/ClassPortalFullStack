@@ -1,0 +1,68 @@
+services:
+  # Main AI API Service (connected to main site Supabase)
+  ai-badge-api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - SUPABASE_URL=https://spucdpmylstfjcyzkrtu.supabase.co
+      - SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwdWNkcG15bHN0ZmpjeXprcnR1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIxODY1NjEsImV4cCI6MjA3Nzc2MjU2MX0.CMa4-kpGSo5lC7X0OSf1_r-fOwyNO9J958cKHvMeJjs
+      - SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwdWNkcG15bHN0ZmpjeXprcnR1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MjE4NjU2MSwiZXhwIjoyMDc3NzYyNTYxfQ.r-QF8uWx6bKI4yhxB32VIGfAOze1ez1rKtr1yJLoilc
+    volumes:
+      - ./ai/models:/app/ai/models
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Dashboard Service
+  ai-badge-dashboard:
+    build: .
+    ports:
+      - "8501:8501"
+    environment:
+      - API_BASE_URL=http://ai-badge-api:8000
+    depends_on:
+      - ai-badge-api
+    command: ["streamlit", "run", "dashboard/app.py", "--server.port", "8501", "--server.address", "0.0.0.0"]
+    restart: unless-stopped
+
+  # Redis for caching and pub/sub
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Background job processor (optional)
+  celery-worker:
+    build: .
+    command: ["celery", "-A", "app.tasks", "worker", "--loglevel=info"]
+    environment:
+      - SUPABASE_URL=https://spucdpmylstfjcyzkrtu.supabase.co
+      - SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwdWNkcG15bHN0ZmpjeXprcnR1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIxODY1NjEsImV4cCI6MjA3Nzc2MjU2MX0.CMa4-kpGSo5lC7X0OSf1_r-fOwyNO9J958cKHvMeJjs
+      - SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwdWNkcG15bHN0ZmpjeXprcnR1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MjE4NjU2MSwiZXhwIjoyMDc3NzYyNTYxfQ.r-QF8uWx6bKI4yhxB32VIGfAOze1ez1rKtr1yJLoilc
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - ai-badge-api
+    volumes:
+      - ./ai/models:/app/ai/models
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+
+networks:
+  default:
+    name: ai-badge-network

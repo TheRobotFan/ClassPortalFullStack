@@ -163,25 +163,27 @@ export function ProfiloClient({ user, stats, badges }: ProfiloClientProps) {
     }
   }
 
-  const getBadgeRarity = (badge: any) => {
-    if (!badge.badge) return "common"
-    const value = badge.badge.requirement_value
-    if (value >= 100) return "legendary"
-    if (value >= 50) return "epic"
-    if (value >= 10) return "rare"
-    return "common"
+  const getBadgeRarity = (userBadge: any) => {
+    if (!userBadge?.badge) return "common"
+    return userBadge.badge.rarity || "common"
   }
 
   const getRarityColor = (rarity: string) => {
     switch (rarity) {
-      case "legendary":
-        return "bg-yellow-500/20 text-yellow-700 dark:text-yellow-400"
-      case "epic":
-        return "bg-purple-500/20 text-purple-700 dark:text-purple-400"
+      case "uncommon":
+        return "bg-emerald-100 text-emerald-800"
       case "rare":
-        return "bg-blue-500/20 text-blue-700 dark:text-blue-400"
+        return "bg-sky-100 text-sky-800"
+      case "epic":
+        return "bg-violet-100 text-violet-800"
+      case "legendary":
+        return "bg-amber-100 text-amber-800"
+      case "supreme":
+        return "bg-rose-100 text-rose-800"
+      case "hacker":
+        return "bg-emerald-900 text-emerald-100"
       default:
-        return "bg-gray-500/20 text-gray-700 dark:text-gray-400"
+        return "bg-slate-100 text-slate-800"
     }
   }
 
@@ -200,6 +202,54 @@ export function ProfiloClient({ user, stats, badges }: ProfiloClientProps) {
       month: "long",
     })
   }
+
+  const XP_TIERS = [
+    { key: "normal", name: "Normale", minLevel: 1, maxLevel: 9 },
+    { key: "pro", name: "Pro", minLevel: 10, maxLevel: 29 },
+    { key: "elite", name: "Elite", minLevel: 30, maxLevel: 59 },
+    { key: "master", name: "Master", minLevel: 60, maxLevel: 99 },
+    { key: "supreme", name: "Supremo", minLevel: 100, maxLevel: 200 },
+  ] as const
+
+  const xpForLevel = (level: number) => {
+    if (!level || level <= 1) return 0
+    return (level - 1) * 500
+  }
+
+  const getTierForLevel = (level: number) => {
+    const normalizedLevel = level || 1
+    const tier = XP_TIERS.find((t) => normalizedLevel >= t.minLevel && normalizedLevel <= t.maxLevel)
+    return tier ?? XP_TIERS[0]
+  }
+
+  const getTierXpProgress = (xp: number, level: number) => {
+    const tier = getTierForLevel(level)
+    const startXp = xpForLevel(tier.minLevel)
+    const endXp = xpForLevel(tier.maxLevel + 1)
+    const xpInTier = Math.max(0, Math.min(xp, endXp) - startXp)
+    const xpTierTotal = Math.max(1, endXp - startXp)
+    const percentage = Math.min((xpInTier / xpTierTotal) * 100, 100)
+    const remaining = Math.max(0, xpTierTotal - xpInTier)
+    return { tier, xpInTier, xpTierTotal, percentage, remaining }
+  }
+
+  const getTierXpBreakdown = (xp: number) => {
+    return XP_TIERS.map((tier) => {
+      const startXp = xpForLevel(tier.minLevel)
+      const endXp = xpForLevel(tier.maxLevel + 1)
+      const amount = Math.max(0, Math.min(xp, endXp) - startXp)
+      return { tier, amount }
+    }).filter((entry) => entry.amount > 0)
+  }
+
+  const hasHackerBadge = Array.isArray(badges)
+    ? badges.some((userBadge: any) => userBadge?.badge?.name === "Hacker della Classe")
+    : false
+
+  const totalXp = (user.xp_points ?? stats.xp) || 0
+  const currentLevel = (user.level ?? stats.level) || 1
+  const tierProgress = getTierXpProgress(totalXp, currentLevel)
+  const tierBreakdown = getTierXpBreakdown(totalXp)
 
   return (
     <div className="min-h-screen bg-background">
@@ -375,8 +425,17 @@ export function ProfiloClient({ user, stats, badges }: ProfiloClientProps) {
         <Card className="p-6 mb-8 bg-gradient-to-br from-primary/5 to-secondary/5">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-xl font-bold">Livello {stats.level || 1}</h3>
-              <p className="text-sm text-foreground/60">{stats.xp || 0} XP totali</p>
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="text-xl font-bold">
+                  Livello {currentLevel}
+                </h3>
+                <span className="px-2 py-1 text-xs rounded-full bg-primary/10 text-primary">
+                  {tierProgress.tier.name}
+                </span>
+              </div>
+              <p className="text-sm text-foreground/60">
+                {totalXp} XP totali
+              </p>
             </div>
             <div className="text-4xl">⭐</div>
           </div>
@@ -384,12 +443,46 @@ export function ProfiloClient({ user, stats, badges }: ProfiloClientProps) {
             <div
               className="bg-gradient-to-r from-primary to-secondary h-3 rounded-full transition-all"
               style={{
-                width: `${Math.min(((stats.xp || 0) % 500) / 5, 100)}%`,
+                width: `${tierProgress.percentage}%`,
               }}
             />
           </div>
-          <p className="text-xs text-foreground/50 mt-2">{500 - ((stats.xp || 0) % 500)} XP al prossimo livello</p>
+          <p className="text-xs text-foreground/50 mt-2">
+            {tierProgress.remaining} XP per completare il sistema {tierProgress.tier.name}
+          </p>
+          {tierBreakdown.length > 0 && (
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+              {tierBreakdown.map(({ tier, amount }) => (
+                <div
+                  key={tier.key}
+                  className="px-3 py-2 rounded-md bg-muted flex items-center justify-between"
+                >
+                  <span className="font-medium">{tier.name}</span>
+                  <span className="text-foreground/70">{amount} XP</span>
+                </div>
+              ))}
+            </div>
+          )}
         </Card>
+
+        {hasHackerBadge && (
+          <Card className="p-6 mb-8 bg-gradient-to-br from-emerald-500/5 to-emerald-500/10 border border-emerald-500/30">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
+                <h3 className="text-xl font-bold mb-1">Pannello Hacker della Classe</h3>
+                <p className="text-sm text-foreground/70 max-w-xl">
+                  Come hacker della classe puoi accedere a un pannello dedicato per monitorare il portale e gestire ruoli
+                  e statistiche avanzate.
+                </p>
+              </div>
+              <Link href="/hacker">
+                <Button className="gap-2 bg-emerald-600 hover:bg-emerald-700 whitespace-nowrap">
+                  Apri Pannello Hacker
+                </Button>
+              </Link>
+            </div>
+          </Card>
+        )}
 
         {/* Tabs */}
         <Tabs defaultValue="badges" className="w-full">
@@ -407,7 +500,21 @@ export function ProfiloClient({ user, stats, badges }: ProfiloClientProps) {
                 <div className="grid md:grid-cols-4 gap-4">
                   {badges.map((userBadge: any) => {
                     const badge = userBadge.badge
-                    const rarity = getBadgeRarity(userBadge)
+                    const rarityKey = getBadgeRarity(userBadge)
+                    const rarityLabel =
+                      rarityKey === "uncommon"
+                        ? "Non comune"
+                        : rarityKey === "rare"
+                          ? "Raro"
+                          : rarityKey === "epic"
+                            ? "Epico"
+                            : rarityKey === "legendary"
+                              ? "Leggendario"
+                              : rarityKey === "supreme"
+                                ? "Supremo"
+                                : rarityKey === "hacker"
+                                  ? "Hacker"
+                                  : "Comune"
                     return (
                       <Card
                         key={userBadge.id}
@@ -416,7 +523,9 @@ export function ProfiloClient({ user, stats, badges }: ProfiloClientProps) {
                         <div className="text-4xl mb-3">{badge.icon_url || "🏆"}</div>
                         <h3 className="font-semibold mb-2">{badge.name}</h3>
                         <p className="text-xs text-foreground/60 mb-2">{badge.description}</p>
-                        <span className={`text-xs px-2 py-1 rounded-full ${getRarityColor(rarity)}`}>{rarity}</span>
+                        <span className={`text-xs px-2 py-1 rounded-full ${getRarityColor(rarityKey)}`}>
+                          {rarityLabel}
+                        </span>
                         {userBadge.earned_at && (
                           <p className="text-xs text-foreground/50 mt-2">
                             Ottenuto il {formatDate(userBadge.earned_at)}
