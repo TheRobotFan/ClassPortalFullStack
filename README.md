@@ -1,4 +1,4 @@
-# 🎓 Clas2e - Piattaforma di Apprendimento Collaborativo
+# 🎓 ClassPortalFullStack - Piattaforma di Apprendimento Collaborativo
 
 > **Piattaforma digitale della classe X per comunicazione, condivisione e collaborazione**
 
